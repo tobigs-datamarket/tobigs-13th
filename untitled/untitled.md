@@ -65,39 +65,45 @@ DACON 3회 아파트 경매가격 예측 모델링 대회 데이터 기반
 
 In \[2\]:
 
-\# !pip install pandas="1.0.0"
+```python
+# !pip install pandas="1.0.0"
+```
 
 In \[2\]:
 
-\# 패키지 import  
-import json  
-import pandas as pd  
-import numpy as np  
-import matplotlib.pyplot as plt  
-import seaborn as sns  
-import warnings  
+```python
+# 패키지 import
+import json
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+import warnings
 %matplotlib inline
-
-plt.style.use\('seaborn'\) \# seaborn 스타일로 변환  
-plt.rc\('font', family='AppleGothic'\)  
-plt.rc\('axes', unicode\_minus=False\)  
-pd.set\_option\('display.max\_columns', None\)  
-warnings.filterwarnings\(action='ignore'\) \# Warning Message 안보이게
-
-/Users/josang-yeon/tobigs/lib/python3.7/site-packages/statsmodels/tools/\_testing.py:19: FutureWarning: pandas.util.testing is deprecated. Use the functions in the public API at pandas.testing instead.  
+plt.style.use('seaborn') # seaborn 스타일로 변환
+plt.rc('font', family='AppleGothic')
+plt.rc('axes', unicode_minus=False)
+pd.set_option('display.max_columns', None)
+warnings.filterwarnings(action='ignore') # Warning Message 안보이게
+# /Users/josang-yeon/tobigs/lib/python3.7/site-packages/statsmodels/tools/_testing.py:19: FutureWarning: pandas.util.testing is deprecated. Use the functions in the public API at pandas.testing instead.
  import pandas.util.testing as tm
+```
 
 In \[3\]:
 
-import matplotlib as mpl  
-\# 고해상도 Plot을 위해 DPI 조절  
-mpl.rcParams\['figure.dpi'\]= 150
+```python
+import matplotlib as mpl
+# 고해상도 Plot을 위해 DPI 조절
+mpl.rcParams['figure.dpi']= 150
+```
 
 In \[4\]:
 
-\#parse\_dates 인자를 통해 datetime으로 변환, 단 변환 불가시 object로 반환  
-df = pd.read\_csv\('Auction\_master\_train.csv',parse\_dates=\[  
- 'Appraisal\_date', 'First\_auction\_date', 'Final\_auction\_date','Preserve\_regist\_date', 'Close\_date'\]\)
+```python
+#parse_dates 인자를 통해 datetime으로 변환, 단 변환 불가시 object로 반환
+df = pd.read_csv('Auction_master_train.csv',parse_dates=[
+ 'Appraisal_date', 'First_auction_date', 'Final_auction_date','Preserve_regist_date', 'Close_date'])
+```
 
 ### A. EDA 진행[¶]()
 
@@ -105,15 +111,19 @@ df = pd.read\_csv\('Auction\_master\_train.csv',parse\_dates=\[
 
 In \[5\]:
 
-df.dropna\(axis=1,inplace=True\)
+```python
+df.dropna(axis=1,inplace=True)
+```
 
 ### 2\) 모든 연속형 변수 간의 상관관계를 Heatmap을 통해 확인[¶]()
 
 In \[7\]:
 
-plt.figure\(figsize=\(16,9\)\)  
-sns.heatmap\(df.corr\(\),cmap='summer',annot=True,fmt="0.1f"\)  
-plt.show\(\)
+```python
+plt.figure(figsize=(16,9))
+sns.heatmap(df.corr(),cmap='summer',annot=True,fmt="0.1f")
+plt.show()
+```
 
 ![](../.gitbook/assets/0.png)
 
@@ -121,18 +131,17 @@ plt.show\(\)
 
 In \[316\]:
 
-g = df.set\_index\('Auction\_key'\).hist\(bins=30,figsize=\(20,15\)\)  
-plt.suptitle\("연속형 변수 분포", x=0.5, y=0.95, ha='center', fontsize='xx-large', fontweight=800\)  
-plt.show\(\)
-
-\# price 관련 데이터가 모두 왼쪽으로 매우 치우친 것을 완화하기 위해 가장 Hammer Price가 높은 아웃아리어 2개를 제외  
-df.sort\_values\('Hammer\_price'\).iloc\[:-2\].set\_index\('Auction\_key'\).hist\(bins=30,figsize=\(20,15\)\)  
-plt.suptitle\("연속형 변수 분포 \(아웃라이어 제거\)", x=0.5, y=0.95, ha='center', fontsize='xx-large', fontweight=800\)  
-plt.show\(\)
+```python
+g = df.set_index('Auction_key').hist(bins=30,figsize=(20,15))
+plt.suptitle("연속형 변수 분포", x=0.5, y=0.95, ha='center', fontsize='xx-large', fontweight=800)
+plt.show()
+# price 관련 데이터가 모두 왼쪽으로 매우 치우친 것을 완화하기 위해 가장 Hammer Price가 높은 아웃아리어 2개를 제외
+df.sort_values('Hammer_price').iloc[:-2].set_index('Auction_key').hist(bins=30,figsize=(20,15))
+plt.suptitle("연속형 변수 분포 (아웃라이어 제거)", x=0.5, y=0.95, ha='center', fontsize='xx-large', fontweight=800)
+plt.show()
+```
 
 ![](../.gitbook/assets/1.png)
-
-In \[ \]:
 
 ### 4\) Target 변수와 관련 있거나, 유의미한 Insight를 얻을 수 있는 시각화를 5개 이상 해주세요 \(subplot활용\) + B. 위에서 도출된 시각화 + 번뜩이는 Insight를 바탕으로 유의미한 Feature를 10개 이상 생성해 주세요
 
@@ -143,7 +152,9 @@ unique를 통해 범주가 몇개인지 파악하고 top과 freq를 통해 최�
 
 In \[104\]:
 
-\# df\[df.columns\[df.dtypes.map\(lambda x: x=='object'\)\]\].describe\(\).transpose\(\)
+```
+# df[df.columns[df.dtypes.map(lambda x: x=='object')]].describe().transpose()
+```
 
 |  | count | unique | top | freq | Analysis |
 | :--- | :--- | :--- | :--- | :--- | :--- |
@@ -177,10 +188,6 @@ Share\_auction\_YorN
 
 정도로 볼 수 있다.
 
-In \[ \]:
-
-In \[ \]:
-
 #### 4.1 ~ 4.5 시각화 + Feature 생성[¶]()
 
 **4.1 Hammer\_price에서의 아웃라이어 + Hammer\_price\_log Feature 생성¶**
@@ -189,17 +196,19 @@ Hammer\_price 분포에 심하게 영향을 끼치는 이상치를 탐지하고 
 
 In \[142\]:
 
-f, ax = plt.subplots\(1,2\)  
-ax\[0\] = plt.subplot\(1,2,1\)  
-\# 낙찰가\(Hammer\_price\) 전체에 대한 히스토그램  
-ax\[0\] = df.Hammer\_price.hist\(figsize=\(10,3\)\)  
-ax\[0\].set\_xlabel\('전체'\)  
-ax\[1\] = plt.subplot\(1,2,2\)  
-\# 낙찰가\(Hammer\_price\) 상위 10%에 대한 히스토그램  
-ax\[1\] = df.sort\_values\('Hammer\_price'\).iloc\[int\(df.shape\[0\]\*0.9\):\].Hammer\_price.hist\(figsize=\(10,3\)\)  
-ax\[1\].set\_xlabel\('상위 10%'\)  
-plt.suptitle\("낙찰가\(Hammer\_price\) 분포도"\)  
-plt.show\(\)
+```python
+f, ax = plt.subplots(1,2)
+ax[0] = plt.subplot(1,2,1)
+# 낙찰가(Hammer_price) 전체에 대한 히스토그램
+ax[0] = df.Hammer_price.hist(figsize=(10,3))
+ax[0].set_xlabel('전체')
+ax[1] = plt.subplot(1,2,2)
+# 낙찰가(Hammer_price) 상위 10%에 대한 히스토그램
+ax[1] = df.sort_values('Hammer_price').iloc[int(df.shape[0]*0.9):].Hammer_price.hist(figsize=(10,3))
+ax[1].set_xlabel('상위 10%')
+plt.suptitle("낙찰가(Hammer_price) 분포도")
+plt.show()
+```
 
 ![](../.gitbook/assets/2.png)
 
@@ -208,21 +217,23 @@ plt.show\(\)
 
 In \[9\]:
 
-f, ax = plt.subplots\(1,3, sharex=True, sharey=True, figsize=\(20,10\)\)  
-ax\[0\] = plt.subplot\(1,3,1\)  
-\# 낙찰가\(Hammer\_price\) 전체에 대한 KDE Plot  
-ax\[0\] = sns.kdeplot\(df.Hammer\_price,color="red",shade=True\)  
-ax\[0\].legend\(\['전체'\]\)  
-ax\[1\] = plt.subplot\(1,3,2\)  
-\# 낙찰가\(Hammer\_price\) 아웃라이어 2개를 제거한 데이터에 대한 KDE Plot  
-ax\[1\] = sns.kdeplot\(df.sort\_values\('Hammer\_price'\)\[:-2\].Hammer\_price,color="blue",shade=True\)  
-ax\[1\].legend\(\['이상치 제거'\]\)  
-ax\[2\] = plt.subplot\(1,3,3\)  
-\# 낙찰가\(Hammer\_price\) 아웃라이어 2개를 제거한 데이터에 로그 변환 후 KDE Plot  
-ax\[2\] = sns.kdeplot\(df.sort\_values\('Hammer\_price'\)\[:-2\].Hammer\_price.transform\(np.log\),color="green",shade=True\)  
-ax\[2\].legend\(\['Log변환'\]\)  
-plt.suptitle\("낙찰가\(Hammer\_price\) 분포도"\)  
-plt.show\(\)
+```python
+f, ax = plt.subplots(1,3, sharex=True, sharey=True, figsize=(20,10))
+ax[0] = plt.subplot(1,3,1)
+# 낙찰가(Hammer_price) 전체에 대한 KDE Plot
+ax[0] = sns.kdeplot(df.Hammer_price,color="red",shade=True)
+ax[0].legend(['전체'])
+ax[1] = plt.subplot(1,3,2)
+# 낙찰가(Hammer_price) 아웃라이어 2개를 제거한 데이터에 대한 KDE Plot
+ax[1] = sns.kdeplot(df.sort_values('Hammer_price')[:-2].Hammer_price,color="blue",shade=True)
+ax[1].legend(['이상치 제거'])
+ax[2] = plt.subplot(1,3,3)
+# 낙찰가(Hammer_price) 아웃라이어 2개를 제거한 데이터에 로그 변환 후 KDE Plot
+ax[2] = sns.kdeplot(df.sort_values('Hammer_price')[:-2].Hammer_price.transform(np.log),color="green",shade=True)
+ax[2].legend(['Log변환'])
+plt.suptitle("낙찰가(Hammer_price) 분포도")
+plt.show()
+```
 
 ![](../.gitbook/assets/3.png)
 
@@ -232,7 +243,9 @@ plt.show\(\)
 
 In \[10\]:
 
-df\['Hammer\_price\_log'\] = df.Hammer\_price.transform\(np.log\)
+```
+df['Hammer_price_log'] = df.Hammer_price.transform(np.log)
+```
 
 **4.2 Total\_appraisal\_price 와 Hammer\_price에 대한 시각화 및 인사이트 + 낙찰가율\(Hammer Price Ratio\), 낙찰가율-지역 Feature 생성¶**
 
@@ -241,9 +254,11 @@ df\['Hammer\_price\_log'\] = df.Hammer\_price.transform\(np.log\)
 
 In \[143\]:
 
-sns.lmplot\(x='Hammer\_price',y='Total\_appraisal\_price',hue='addr\_do',data=df\)  
-plt.suptitle\("도시별 낙찰가/감정가 분포도 및 추세선 \(log 변환 전\)",x=0.5, y=1.05, ha='center', fontsize='large', fontweight=800\)  
-plt.show\(\)
+```python
+sns.lmplot(x='Hammer_price',y='Total_appraisal_price',hue='addr_do',data=df)
+plt.suptitle("도시별 낙찰가/감정가 분포도 및 추세선 (log 변환 전)",x=0.5, y=1.05, ha='center', fontsize='large', fontweight=800)
+plt.show()
+```
 
 ![](../.gitbook/assets/4.png)
 
@@ -251,13 +266,17 @@ plt.show\(\)
 
 In \[26\]:
 
-df\['Total\_appraisal\_price\_log'\] = df.Total\_appraisal\_price.transform\(np.log\)
+```
+df['Total_appraisal_price_log'] = df.Total_appraisal_price.transform(np.log)
+```
 
 In \[25\]:
 
-sns.lmplot\(x='Hammer\_price\_log',y='Total\_appraisal\_price\_log',hue='addr\_do',data=df\)  
-plt.suptitle\("도시별 낙찰가/감정가 분포도 및 추세선 \(log 변환 후\)",x=0.5, y=1.05, ha='center', fontsize='large', fontweight=800\)  
-plt.show\(\)
+```python
+sns.lmplot(x='Hammer_price_log',y='Total_appraisal_price_log',hue='addr_do',data=df)
+plt.suptitle("도시별 낙찰가/감정가 분포도 및 추세선 (log 변환 후)",x=0.5, y=1.05, ha='center', fontsize='large', fontweight=800)
+plt.show()
+```
 
 ![](../.gitbook/assets/5.png)
 
@@ -269,20 +288,24 @@ plt.show\(\)
 
 In \[27\]:
 
-df\['HPR'\] = df.Hammer\_price / df.Total\_appraisal\_price
+```
+df['HPR'] = df.Hammer_price / df.Total_appraisal_price
+```
 
 In \[241\]:
 
-\# 서울/부산 구별 평균 낙찰가율 및 낙찰가 비교 그래프 Plotting  
-f, \(ax1, ax2\) = plt.subplots\(2, figsize=\(15,10\)\)  
-plt.suptitle\("서울/부산 구별 평균 낙찰가율 및 낙찰가 비교", x=0.5, y=0.92, ha='center', fontsize='xx-large', fontweight=800\)  
-df.pivot\_table\('HPR','addr\_si','addr\_do',aggfunc=np.mean\).sort\_values\(\['서울','부산'\], ascending=False\).plot.bar\(ax=ax1, ylim=\(0.8,1.1\)\)  
-plt.xticks\(rotation=75\)  
-ax1.set\_ylabel\("감정가 대비 낙찰가 비율"\)  
-df.pivot\_table\('Hammer\_price','addr\_si','addr\_do',aggfunc=np.mean\).sort\_values\(\['서울','부산'\], ascending=False\).plot.bar\(ax=ax2\)  
-plt.xticks\(rotation=75\)  
-ax2.set\_ylabel\("낙찰가"\)  
-plt.show\(\)
+```python
+# 서울/부산 구별 평균 낙찰가율 및 낙찰가 비교 그래프 Plotting
+f, (ax1, ax2) = plt.subplots(2, figsize=(15,10))
+plt.suptitle("서울/부산 구별 평균 낙찰가율 및 낙찰가 비교", x=0.5, y=0.92, ha='center', fontsize='xx-large', fontweight=800)
+df.pivot_table('HPR','addr_si','addr_do',aggfunc=np.mean).sort_values(['서울','부산'], ascending=False).plot.bar(ax=ax1, ylim=(0.8,1.1))
+plt.xticks(rotation=75)
+ax1.set_ylabel("감정가 대비 낙찰가 비율")
+df.pivot_table('Hammer_price','addr_si','addr_do',aggfunc=np.mean).sort_values(['서울','부산'], ascending=False).plot.bar(ax=ax2)
+plt.xticks(rotation=75)
+ax2.set_ylabel("낙찰가")
+plt.show()
+```
 
 ![](../.gitbook/assets/6.png)
 
@@ -292,16 +315,20 @@ plt.show\(\)
 
 In \[39\]:
 
-df\['High\_price\_si'\] = df.addr\_si.map\(lambda x: x in \['강남구','서초구','용산구','송파구','해운대구'\]\)  
-df\['High\_HPR\_si'\] = df.addr\_si.map\(lambda x: x in \['성동구','송파구','양천구','금정구','수영구','연제구'\]\)
+```python
+df['High_price_si'] = df.addr_si.map(lambda x: x in ['강남구','서초구','용산구','송파구','해운대구'])
+df['High_HPR_si'] = df.addr_si.map(lambda x: x in ['성동구','송파구','양천구','금정구','수영구','연제구'])
+```
 
 또한 강서구와 중구가 서울과 부산에 동시에 있지만 특히 중구가 서로 평균 낙찰가율과 평균 낙찰가에서 상당한 차이를 보여 이 둘을 구분해야할 필요가 있다.  
 이는 강서구와 중구에 각각 부산일 경우 뒤에 'b'를 붙이는 것으로 전처리를 하였다. 코드는 아래와 같다.
 
 In \[45\]:
 
-df.loc\[df.query\('addr\_do=="부산"&addr\_si=="강서구"'\).index,'addr\_si'\] = "강서구b"  
-df.loc\[df.query\('addr\_do=="부산"&addr\_si=="중구"'\).index,'addr\_si'\] = "중구b"
+```python
+df.loc[df.query('addr_do=="부산"&addr_si=="강서구"').index,'addr_si'] = "강서구b"
+df.loc[df.query('addr_do=="부산"&addr_si=="중구"').index,'addr_si'] = "중구b"
+```
 
 그런 후 낮은 낙찰가율을 보이는 서울 종로구, 중구와 부산 영도구 동래구에 대해
 
@@ -309,9 +336,9 @@ df.loc\[df.query\('addr\_do=="부산"&addr\_si=="중구"'\).index,'addr\_si'\] =
 
 In \[144\]:
 
-df\['Low\_HPR\_si'\] = df.addr\_si.map\(lambda x: x in \['종로구','중구','영도구','동래구'\]\)
-
-In \[ \]:
+```
+df['Low_HPR_si'] = df.addr_si.map(lambda x: x in ['종로구','중구','영도구','동래구'])
+```
 
 **4.3 Total\_building\_auction\_area 와 Hammer\_price에 대한 시각화 및 인사이트 + 평당 가격\(PPP\) Feature 생성 및 검증¶**
 
@@ -320,8 +347,10 @@ In \[ \]:
 
 In \[319\]:
 
-\# 낙찰가 상위 10개의 시,구,총건물경매면적  
-df.sort\_values\('Hammer\_price',ascending=False\).head\(10\)\[\['addr\_do','addr\_si','Total\_building\_auction\_area','Hammer\_price'\]\]
+```python
+# 낙찰가 상위 10개의 시,구,총건물경매면적
+df.sort_values('Hammer_price',ascending=False).head(10)[['addr_do','addr_si','Total_building_auction_area','Hammer_price']]
+```
 
 Out\[319\]:
 
@@ -345,26 +374,32 @@ Out\[319\]:
 
 In \[60\]:
 
-df\['Total\_building\_auction\_area\_log'\] = df.Total\_building\_auction\_area.transform\(np.log\)
+```
+df['Total_building_auction_area_log'] = df.Total_building_auction_area.transform(np.log)
+```
 
 In \[66\]:
 
-f, \(ax1, ax2\) = plt.subplots\(1,2, figsize=\(10,5\)\)  
-sns.kdeplot\(df.Total\_building\_auction\_area,color="red",shade=True, ax=ax1\)  
-ax1.set\_xlabel\("로그 변환 전 총 건물 경매 면적 \(m^2\)"\)  
-sns.kdeplot\(df.Total\_building\_auction\_area\_log,color="red",shade=True, ax=ax2\)  
-plt.suptitle\("총 건물 경매면적 로그 변환 전/후 분포 비교", x=0.5, y=0.95, ha='center', fontsize='large', fontweight=800\)  
-plt.xlabel\("로그 변환 후 총 건물 경매 면적"\)  
-plt.show\(\)
+```python
+f, (ax1, ax2) = plt.subplots(1,2, figsize=(10,5))
+sns.kdeplot(df.Total_building_auction_area,color="red",shade=True, ax=ax1)
+ax1.set_xlabel("로그 변환 전 총 건물 경매 면적 (m^2)")
+sns.kdeplot(df.Total_building_auction_area_log,color="red",shade=True, ax=ax2)
+plt.suptitle("총 건물 경매면적 로그 변환 전/후 분포 비교", x=0.5, y=0.95, ha='center', fontsize='large', fontweight=800)
+plt.xlabel("로그 변환 후 총 건물 경매 면적")
+plt.show()
+```
 
 ![](../.gitbook/assets/7.png)
 
 In \[72\]:
 
-sns.lmplot\(x='Hammer\_price\_log',y='Total\_building\_auction\_area\_log',hue='addr\_do',data=df\)  
-plt.suptitle\("낙찰가\_log 대비 총 건물 경매면적\_log", x=0.5, y=1.05, ha='center', fontsize='large', fontweight=800\)  
-plt.xlabel\("낙찰가\_log"\)  
-plt.show\(\)
+```python
+sns.lmplot(x='Hammer_price_log',y='Total_building_auction_area_log',hue='addr_do',data=df)
+plt.suptitle("낙찰가_log 대비 총 건물 경매면적_log", x=0.5, y=1.05, ha='center', fontsize='large', fontweight=800)
+plt.xlabel("낙찰가_log")
+plt.show()
+```
 
 ![](../.gitbook/assets/8.png)
 
@@ -373,13 +408,17 @@ plt.show\(\)
 
 In \[300\]:
 
-\# 평당 가격 생성 코드  
-df\['PPP'\] = df.Total\_appraisal\_price / \(df.Total\_building\_auction\_area / 3\)
+```python
+# 평당 가격 생성 코드
+df['PPP'] = df.Total_appraisal_price / (df.Total_building_auction_area / 3)
+```
 
 In \[301\]:
 
-\# 평당 가격 통계  
-df.PPP.describe\(\)
+```python
+# 평당 가격 통계
+df.PPP.describe()
+```
 
 Out\[301\]:
 
@@ -397,16 +436,18 @@ Name: PPP, dtype: float64
 
 In \[302\]:
 
-\# 지역구별 평균 평당 가격 및 평균 감정가 그래프 그리기  
-f, ax2 = plt.subplots\(1,1, sharex='all'\)  
-df.pivot\_table\('PPP','addr\_si','addr\_do',aggfunc=np.mean\).sort\_values\(\['서울','부산'\], ascending=False\).plot.bar\(ax=ax2\)  
-plt.xticks\(rotation=75\)  
-ax1 = ax2.twinx\(\)  
-df.pivot\_table\('Total\_appraisal\_price','addr\_si','addr\_do',aggfunc=np.mean\).sort\_values\(\['서울','부산'\], ascending=False\).plot\(ax=ax1, alpha=0.7\)  
-f.tight\_layout\(\)  
-plt.grid\(False\)  
-plt.suptitle\("지역구별 평균 평당 가격 / 감정가", x=0.5, y=1.05, ha='center', fontsize='large', fontweight=800\)  
-plt.show\(\)
+```python
+# 지역구별 평균 평당 가격 및 평균 감정가 그래프 그리기
+f, ax2 = plt.subplots(1,1, sharex='all')
+df.pivot_table('PPP','addr_si','addr_do',aggfunc=np.mean).sort_values(['서울','부산'], ascending=False).plot.bar(ax=ax2)
+plt.xticks(rotation=75)
+ax1 = ax2.twinx()
+df.pivot_table('Total_appraisal_price','addr_si','addr_do',aggfunc=np.mean).sort_values(['서울','부산'], ascending=False).plot(ax=ax1, alpha=0.7)
+f.tight_layout()
+plt.grid(False)
+plt.suptitle("지역구별 평균 평당 가격 / 감정가", x=0.5, y=1.05, ha='center', fontsize='large', fontweight=800)
+plt.show()
+```
 
 ![](../.gitbook/assets/9.png)
 
@@ -421,67 +462,69 @@ plt.show\(\)
 
 In \[303\]:
 
-import folium  
+```python
+import folium
 from folium.plugins import FastMarkerCluster, MarkerCluster
-
-\# folium 맵 초기 설정, 대한민국 전체 기준  
-folium\_map = folium.Map\(location=\[36.5502, 126.982\], zoom\_start=7\)  
-mc = MarkerCluster\(name="Marker Cluster"\)  
-\# 서울시 낙찰가 상위 100개 건물 기준  
-for key, row in df.query\("addr\_do=='서울'"\).sort\_values\('Hammer\_price',ascending=False\)\[:100\].iterrows\(\):  
- folium.CircleMarker\(location=\[row\['point.y'\], row\['point.x'\]\], radius= 10, popup="Price: {}".format\(int\(row\['PPP'\]\)\),  
- color="green", fill=True\).add\_to\(mc\)
-
-mc.add\_to\(folium\_map\)  
-folium.LayerControl\(\).add\_to\(folium\_map\)  
-folium\_map
+# folium 맵 초기 설정, 대한민국 전체 기준
+folium_map = folium.Map(location=[36.5502, 126.982], zoom_start=7)
+mc = MarkerCluster(name="Marker Cluster")
+# 서울시 낙찰가 상위 100개 건물 기준
+for key, row in df.query("addr_do=='서울'").sort_values('Hammer_price',ascending=False)[:100].iterrows():
+ folium.CircleMarker(location=[row['point.y'], row['point.x']], radius= 10, popup="Price: {}".format(int(row['PPP'])),
+ color="green", fill=True).add_to(mc)
+mc.add_to(folium_map)
+folium.LayerControl().add_to(folium_map)
+folium_map
+```
 
 Out\[303\]:
 
 In \[304\]:
 
-folium\_map = folium.Map\(location=\[36.5502, 126.982\], zoom\_start=7\)  
-mc = MarkerCluster\(name="Marker Cluster"\)  
-\# 서울시 평당 가격 상위 100개 건물 기준  
-for key, row in df.query\("addr\_do=='서울'"\).sort\_values\('PPP',ascending=False\)\[:100\].iterrows\(\):  
- folium.CircleMarker\(location=\[row\['point.y'\], row\['point.x'\]\], radius= 10, popup="Price: {}".format\(int\(row\['PPP'\]\)\),  
- color="green", fill=True\).add\_to\(mc\)
-
-mc.add\_to\(folium\_map\)  
-folium.LayerControl\(\).add\_to\(folium\_map\)  
-folium\_map
+```python
+folium_map = folium.Map(location=[36.5502, 126.982], zoom_start=7)
+mc = MarkerCluster(name="Marker Cluster")
+# 서울시 평당 가격 상위 100개 건물 기준
+for key, row in df.query("addr_do=='서울'").sort_values('PPP',ascending=False)[:100].iterrows():
+ folium.CircleMarker(location=[row['point.y'], row['point.x']], radius= 10, popup="Price: {}".format(int(row['PPP'])),
+ color="green", fill=True).add_to(mc)
+mc.add_to(folium_map)
+folium.LayerControl().add_to(folium_map)
+folium_map
+```
 
 Out\[304\]:
 
 In \[305\]:
 
-folium\_map = folium.Map\(location=\[36.5502, 126.982\], zoom\_start=7\)  
-mc = MarkerCluster\(name="Marker Cluster"\)  
-\# 서울시 평당 가격 하위 100개 건물 기준  
-for key, row in df.query\("addr\_do=='서울'"\).sort\_values\('PPP',ascending=True\)\[:100\].iterrows\(\):  
- folium.CircleMarker\(location=\[row\['point.y'\], row\['point.x'\]\], radius= 10, popup="Price: {}".format\(int\(row\['PPP'\]\)\),  
- color="green", fill=True\).add\_to\(mc\)
-
-mc.add\_to\(folium\_map\)  
-folium.LayerControl\(\).add\_to\(folium\_map\)  
-folium\_map
+```python
+folium_map = folium.Map(location=[36.5502, 126.982], zoom_start=7)
+mc = MarkerCluster(name="Marker Cluster")
+# 서울시 평당 가격 하위 100개 건물 기준
+for key, row in df.query("addr_do=='서울'").sort_values('PPP',ascending=True)[:100].iterrows():
+ folium.CircleMarker(location=[row['point.y'], row['point.x']], radius= 10, popup="Price: {}".format(int(row['PPP'])),
+ color="green", fill=True).add_to(mc)
+mc.add_to(folium_map)
+folium.LayerControl().add_to(folium_map)
+folium_map
+```
 
 Out\[305\]:
 
 In \[306\]:
 
-\# import folium  
-\# from folium.plugins import FastMarkerCluster, MarkerCluster
-
-\# folium\_map = folium.Map\(location=\[36.5502, 126.982\], zoom\_start=7\)  
-\# mc = MarkerCluster\(name="Marker Cluster"\)  
-\# for key, row in df.query\("addr\_do=='부산'"\).sort\_values\('Hammer\_price',ascending=False\)\[:50\].iterrows\(\):  
-\# folium.CircleMarker\(location=\[row\['point.y'\], row\['point.x'\]\], radius= 10, popup="Price: {}".format\(int\(row\['PPP'\]\)\),  
-\# color="green", fill=True\).add\_to\(mc\)
-
-\# mc.add\_to\(folium\_map\)  
-\# folium.LayerControl\(\).add\_to\(folium\_map\)  
-\# folium\_map
+```python
+# import folium
+# from folium.plugins import FastMarkerCluster, MarkerCluster
+# folium_map = folium.Map(location=[36.5502, 126.982], zoom_start=7)
+# mc = MarkerCluster(name="Marker Cluster")
+# for key, row in df.query("addr_do=='부산'").sort_values('Hammer_price',ascending=False)[:50].iterrows():
+# folium.CircleMarker(location=[row['point.y'], row['point.x']], radius= 10, popup="Price: {}".format(int(row['PPP'])),
+# color="green", fill=True).add_to(mc)
+# mc.add_to(folium_map)
+# folium.LayerControl().add_to(folium_map)
+# folium_map
+```
 
 | 서울지역 낙찰가 상위 100개 |
 | :--- |
@@ -507,17 +550,21 @@ In \[ \]:
 
 In \[223\]:
 
-\# 현재 층과 낙찰가\_log의 상관 관계  
-sns.lmplot\(y='Hammer\_price\_log',x='Current\_floor',hue='addr\_do',data=df\)  
-plt.suptitle\("", x=0.5, y=1.05, ha='center', fontsize='large', fontweight=800\)  
-plt.show\(\)
+```python
+# 현재 층과 낙찰가_log의 상관 관계
+sns.lmplot(y='Hammer_price_log',x='Current_floor',hue='addr_do',data=df)
+plt.suptitle("", x=0.5, y=1.05, ha='center', fontsize='large', fontweight=800)
+plt.show()
+```
 
 ![](../.gitbook/assets/10.png)
 
 In \[187\]:
 
-\# 현재층 기술통계량  
-df.Current\_floor.describe\(\)
+```python
+# 현재층 기술통계량
+df.Current_floor.describe()
+```
 
 Out\[187\]:
 
@@ -533,13 +580,19 @@ Name: Current\_floor, dtype: float64
 
 In \[193\]:
 
-\# 층분류 Feature 생성  
-df\['Current\_floor\_type'\] = df.Current\_floor.map\(lambda x: "고층부" if x &gt;= 10 else \("중층부" if x &gt;= 5 else "저층부"\)\)
+```python
+# 층분류 Feature 생성
+df['Current_floor_type'] = df.Current_floor.map(lambda x: "고층부" if x >= 10 else ("중층부" if x >= 5 else "저층부"))
+```
+
+
 
 In \[226\]:
 
-\# 각 층분류 별 Row 갯수 -&gt; 균일하게 분포하는 것을 알 수 있다.  
-df.Current\_floor\_type.value\_counts\(\)
+```python
+# 각 층분류 별 Row 갯수 -> 균일하게 분포하는 것을 알 수 있다.
+df.Current_floor_type.value_counts()
+```
 
 Out\[226\]:
 
@@ -550,9 +603,11 @@ Name: Current\_floor\_type, dtype: int64
 
 In \[227\]:
 
-\# 층분류별 평균 낙찰가 -&gt; 고층부로 갈수록 평균이 높아지는 것을 확인할 수 있다.  
-df.pivot\_table\('Hammer\_price','Current\_floor\_type',aggfunc=np.mean\).sort\_values\("Hammer\_price"\).plot.bar\(\)  
-plt.show\(\)
+```python
+# 층분류별 평균 낙찰가 -> 고층부로 갈수록 평균이 높아지는 것을 확인할 수 있다.
+df.pivot_table('Hammer_price','Current_floor_type',aggfunc=np.mean).sort_values("Hammer_price").plot.bar()
+plt.show()
+```
 
 ![](../.gitbook/assets/11.png)
 
@@ -564,24 +619,28 @@ plt.show\(\)
 
 In \[266\]:
 
-\# 시작 경매월, 최종 경매월, 최종경매년월 Feature 생성  
-df\['Final\_auction\_month'\] = df.Final\_auction\_date.astype\('datetime64'\).dt.month  
-df\['First\_auction\_month'\] = df.First\_auction\_date.astype\('datetime64'\).dt.month  
-df\['Final\_auction\_year\_month'\] = df.Final\_auction\_date.astype\('datetime64'\).map\(lambda x: x.strftime\('%Y-%m'\)\)
+```python
+# 시작 경매월, 최종 경매월, 최종경매년월 Feature 생성
+df['Final_auction_month'] = df.Final_auction_date.astype('datetime64').dt.month
+df['First_auction_month'] = df.First_auction_date.astype('datetime64').dt.month
+df['Final_auction_year_month'] = df.Final_auction_date.astype('datetime64').map(lambda x: x.strftime('%Y-%m'))
+```
 
 * 2016년 4월부터 2018년 3월까지의 평균 낙찰가 \(Line\) 및 경매 건수 \(bar\) 추이
 
 In \[268\]:
 
-f, ax2 = plt.subplots\(1,1, sharex='all'\)  
-df.pivot\_table\('Hammer\_price','Final\_auction\_year\_month','High\_price\_si',aggfunc="count"\).plot.bar\(ax=ax2,ylim=\(0,200\), stacked=True, alpha=0.3\)  
-\# Multiple Y-Axis  
-ax1 = ax2.twinx\(\)  
-\# 지나치게 높아 평균에 크게 영향을 끼치는 최고가 경매 2개 제거  
-df.sort\_values\('Hammer\_price'\)\[:-2\].pivot\_table\('Hammer\_price','Final\_auction\_year\_month',aggfunc=np.mean\).plot\(ax=ax1, alpha=0.7\)  
-ax1.grid\(False\)  
-ax2.grid\(False\)  
-plt.show\(\)
+```python
+f, ax2 = plt.subplots(1,1, sharex='all')
+df.pivot_table('Hammer_price','Final_auction_year_month','High_price_si',aggfunc="count").plot.bar(ax=ax2,ylim=(0,200), stacked=True, alpha=0.3)
+# Multiple Y-Axis
+ax1 = ax2.twinx()
+# 지나치게 높아 평균에 크게 영향을 끼치는 최고가 경매 2개 제거
+df.sort_values('Hammer_price')[:-2].pivot_table('Hammer_price','Final_auction_year_month',aggfunc=np.mean).plot(ax=ax1, alpha=0.7)
+ax1.grid(False)
+ax2.grid(False)
+plt.show()
+```
 
 ![](../.gitbook/assets/12.png)
 
@@ -594,19 +653,25 @@ plt.show\(\)
 
 In \[271\]:
 
-df\['Final\_auction\_weekday'\] = df.Final\_auction\_date.dt.weekday
+```
+df['Final_auction_weekday'] = df.Final_auction_date.dt.weekday
+```
 
 In \[294\]:
 
-from pandas.api.types import CategoricalDtype  
-\# 숫자로 표현된 요일을 요일 이름으로 변환 및 카테고리로 변환  
-df.Final\_auction\_weekday = df.Final\_auction\_weekday.replace\({0:'Mon',1:'Tue',2:'Wed',3:'Thu',4:'Fri'}\).astype\(CategoricalDtype\(\['Mon','Tue','Wed','Thu','Fri'\]\)\)
+```text
+from pandas.api.types import CategoricalDtype
+# 숫자로 표현된 요일을 요일 이름으로 변환 및 카테고리로 변환
+df.Final_auction_weekday = df.Final_auction_weekday.replace({0:'Mon',1:'Tue',2:'Wed',3:'Thu',4:'Fri'}).astype(CategoricalDtype(['Mon','Tue','Wed','Thu','Fri']))
+```
 
 In \[295\]:
 
-df.pivot\_table\('Hammer\_price',\['addr\_do'\],'Final\_auction\_weekday', aggfunc=np.mean\).plot.bar\(\)  
-plt.ylabel\("평균 낙찰가"\)  
-plt.show\(\)
+```python
+df.pivot_table('Hammer_price',['addr_do'],'Final_auction_weekday', aggfunc=np.mean).plot.bar()
+plt.ylabel("평균 낙찰가")
+plt.show()
+```
 
 ![](../.gitbook/assets/13.png)
 
@@ -615,7 +680,9 @@ plt.show\(\)
 
 In \[297\]:
 
-\# df.pivot\_table\('Hammer\_price',\['addr\_do','addr\_si'\],'Final\_auction\_weekday', aggfunc='count'\)
+```
+# df.pivot_table('Hammer_price',['addr_do','addr_si'],'Final_auction_weekday', aggfunc='count')
+```
 
 ### 5. Feature 정리[¶]()
 
