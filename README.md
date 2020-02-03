@@ -10,7 +10,9 @@
 
 2014년을 시작으로 현재 12기, 13기가 활동 중입니다.
 
-과제 기반 다양한 튜토리얼을 gitbook에 업로드 중입니다[Gitbook 가기](https://tobigs.gitbook.io/tobigs/)
+과제 기반 다양한 튜토리얼을 gitbook에 업로드 중입니다  
+
+[Tobigs GitBook](https://tobigs.gitbook.io/tobigs/)
 
 
 
