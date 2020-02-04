@@ -29,7 +29,7 @@ sns.pairplot(data=df, vars=['Total_land_auction_area','Total_building_area',
 plt.show()
 ```
 
-![](.gitbook/assets/image%20%286%29.png)
+![](.gitbook/assets/image%20%289%29.png)
 
 ```python
 #outlier처럼 보이는 점 찾기
@@ -97,7 +97,7 @@ sns.pairplot(data=df, vars=['Total_land_auction_area','Total_building_area',
 plt.show()
 ```
 
-![](.gitbook/assets/image%20%287%29.png)
+![](.gitbook/assets/image%20%2810%29.png)
 
 이제 조금 그래프다운 형태를 띠나 여전히 outlier 의심점이 보인다. 이를 또 찾아보도록 하자.
 
@@ -216,7 +216,7 @@ sns.pairplot(data=df, vars=['Total_land_auction_area','Total_building_area',
 plt.show()
 ```
 
-![](.gitbook/assets/image%20%282%29.png)
+![](.gitbook/assets/image%20%283%29.png)
 
 훨씬 깔끔한 scatter plot이 출력된다.
 

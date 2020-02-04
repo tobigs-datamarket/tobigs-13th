@@ -29,7 +29,7 @@ sns.pairplot(data=df, vars=['Total_land_auction_area','Total_building_area',
 plt.show()
 ```
 
-![](.gitbook/assets/image%20%286%29.png)
+![](.gitbook/assets/image%20%289%29.png)
 
 ```python
 #outlier처럼 보이는 점 찾기
@@ -97,7 +97,7 @@ sns.pairplot(data=df, vars=['Total_land_auction_area','Total_building_area',
 plt.show()
 ```
 
-![](.gitbook/assets/image%20%287%29.png)
+![](.gitbook/assets/image%20%2810%29.png)
 
 이제 조금 그래프다운 형태를 띠나 여전히 outlier 의심점이 보인다. 이를 또 찾아보도록 하자.
 
@@ -216,7 +216,7 @@ sns.pairplot(data=df, vars=['Total_land_auction_area','Total_building_area',
 plt.show()
 ```
 
-![](.gitbook/assets/image%20%282%29.png)
+![](.gitbook/assets/image%20%283%29.png)
 
 훨씬 깔끔한 scatter plot이 출력된다.
 
@@ -293,7 +293,7 @@ df2_s.plot.hist(subplots=True, legend=True, layout=(3, 3))
 #https://harangdev.github.io/applied-data-science-with-python/applied-data-plotting-in-python/3/
 ```
 
-![](.gitbook/assets/image%20%288%29.png)
+![](.gitbook/assets/image%20%2812%29.png)
 
 위와같이 scaling은 히스토그램에 영향이 없다. 변수 변환을 통해 히스토그램을 좀 더 이쁘게 변환해보겠다.
 
@@ -360,4 +360,558 @@ Hammer_price                   1929 non-null float64
 dtypes: float64(7)
 memory usage: 120.6 KB
 ```
+
+```python
+df2_s.plot.hist(subplots=True, legend=True, layout=(3, 3), range=(-8,4), bins=20)
+
+#plot.hist의 다른 조건들 참조
+#https://matplotlib.org/api/_as_gen/matplotlib.pyplot.hist.html
+```
+
+![](.gitbook/assets/image%20%2811%29.png)
+
+xlabel의 범위가 일치하지 않아 price 그래프는 이쁘게 나왔으나 area 그래프는 한곳에 몰려있어 보임을 알 수 있다. 이는 다음에 나타낼 subplot 개별 지정을 통해 해결할 수 있다.
+
+```python
+import matplotlib.pyplot as plt
+from matplotlib import gridspec
+
+fig = plt.figure(figsize=(5, 10)) 
+plt.tight_layout()
+fig.subplots_adjust(bottom=0.5)
+
+f,ax=plt.subplots(6,2) # 5개의 Figure
+
+#각 subplot 크기를 조정하는 방법
+gs = gridspec.GridSpec(nrows=2, # row 몇 개 
+                       ncols=3, # col 몇 개 
+                       height_ratios=[1, 1], 
+                       width_ratios=[2,2,2]
+                      )
+
+###첫째줄-price plot
+ax[0] = plt.subplot(gs[0])
+ax[0] = sns.distplot(df2_s['Total_appraisal_price'])
+
+ax[1] = plt.subplot(gs[1])
+ax[1] = sns.distplot(df2_s['Minimum_sales_price'])
+
+ax[2] = plt.subplot(gs[2])
+ax[2] = sns.distplot(df2_s['Hammer_price'])
+
+
+##둘째줄 - area plot
+ax[3] = plt.subplot(gs[3])
+ax[3] = sns.distplot(df2_s['Total_land_auction_area'])
+
+ax[4] = plt.subplot(gs[4])
+ax[4] = sns.distplot(df2_s['Total_building_auction_area'])
+
+ax[5] = plt.subplot(gs[5])
+ax[5] = sns.distplot(df2_s['Total_building_area'])
+
+plt.tight_layout()
+plt.show()
+```
+
+![](.gitbook/assets/image%20%288%29.png)
+
+이제 그래프들이 대략적인 정규분포 모양을 따름을 알 수 있다. 다만 Total building auction area가 특정 값에 몰려있게 됨을 알 수 있는데 이는 건물이 지어지는 지역에서의 면적의 한계점이 존재한다고 파악할 수 있을 것 같다. Total building auction area와 Total building area는 거의 일치하나 경매에 사용된 빌딩의 면적이 좀 더 특정 값에 몰리는 것을 보아 경매에 선호되는 면적이 있거나, 범위를 내리거나 올려서 특정 값을 맞춘 것이 아닐까싶다.
+
+## 3. 범주형 변수 인코
+
+### 3-1. 날짜 인코딩 - 과제 1 참조
+
+```python
+#아까 제외한 행들이 있으므로 index 다시 지정
+df=df.reset_index()
+del df['index']
+#https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.reset_index.html
+
+
+#날짜 뒤에 시간은 필요없으므로 제거한다.
+df["First_auction_date"]= df["First_auction_date"].str.split(" ", n = 1, expand = True)
+df["Final_auction_date"]= df["Final_auction_date"].str.split(" ", n = 1, expand = True)
+
+#https://www.geeksforgeeks.org/python-pandas-split-strings-into-two-list-columns-using-str-split/
+
+
+#요일 출력을 위해 ' '로 분리하고 datetime.strftime에 차례로 입력하여 요일을 출력해보도록한다.
+from datetime import datetime
+import numpy as np
+
+
+#-를 기준으로 split
+a_s=df["First_auction_date"].str.split("-",expand = True)    
+a_e=df["Final_auction_date"].str.split("-", expand = True)
+
+
+#split 결과가 object 형태로 반환되어 numeric으로 바꾸기
+a_s[0]=pd.to_numeric(a_s[0]) 
+a_s[1]=pd.to_numeric(a_s[1])
+a_s[2]=pd.to_numeric(a_s[2])
+
+a_e[0]=pd.to_numeric(a_e[0])
+a_e[1]=pd.to_numeric(a_e[1])
+a_e[2]=pd.to_numeric(a_e[2])
+
+
+#요일 출력 변수 생성 및 초기값 지정
+df['auction_start_weekday']=0
+df['auction_end_weekday']=0
+
+
+#요일 기록
+for i in range(0,len(df)):
+    df['auction_start_weekday'][i]=datetime(a_s[0][i], a_s[1][i], a_s[2][i]).weekday()
+    df['auction_end_weekday'][i]=datetime(a_e[0][i],a_e[1][i],a_e[2][i]).weekday()
+
+    
+#https://stackoverflow.com/questions/9847213/how-do-i-get-the-day-of-week-given-a-date   ##monday-sunday로 글자로 기록
+#https://docs.python.org/2/library/datetime.html   ##숫자로 기록, 0=Monday
+```
+
+```python
+df.head() #변수가 잘 생성되었는지 확인
+```
+
+|  Auction\_key | Auction\_class | Bid\_class | Claim\_price | Appraisal\_company | Appraisal\_date | Auction\_count | Auction\_miscarriage\_count | Total\_land\_gross\_area | Total\_land\_real\_area | Total\_land\_auction\_area | Total\_building\_area | Total\_building\_auction\_area | Total\_appraisal\_price | Minimum\_sales\_price | First\_auction\_date | Final\_auction\_date | Final\_result | Creditor | addr\_do | addr\_si | addr\_dong | addr\_li | addr\_san | addr\_bunji1 | addr\_bunji2 | addr\_etc | Apartment\_usage | Preserve\_regist\_date | Total\_floor | Current\_floor | Specific | Share\_auction\_YorN | road\_name | road\_bunji1 | road\_bunji2 | Close\_date | Close\_result | point.y | point.x | Hammer\_price | auction\_start\_weekday | auction\_end\_weekday |  |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| 0 | 2687 | 임의 | 개별 | 1766037301 | 정명감정 | 2017-07-26 00:00:00 | 2 | 1 | 12592.0 | 37.35 | 37.35 | 181.77 | 181.77 | 836000000 | 668800000 | 2018-02-13 | 2018-03-20 | 낙찰 | 베리타스자산관리대부 | 부산 | 해운대구 | 우동 | NaN | N | 1398.0 | NaN | 해운대엑소디움 5층 101-502호 | 주상복합 | 2009-07-14 00:00:00 | 45 | 5 | NaN | N | 해운대해변로 | 30.0 | NaN | 2018-06-14 00:00:00 | 배당 | 35.162717 | 129.137048 | 760000000 | 1 | 1 |
+| 1 | 2577 | 임의 | 일반 | 152946867 | 희감정 | 2016-09-12 00:00:00 | 2 | 1 | 42478.1 | 18.76 | 18.76 | 118.38 | 118.38 | 1073000000 | 858400000 | 2016-12-29 | 2017-02-02 | 낙찰 | 흥국저축은행 | 부산 | 해운대구 | 우동 | NaN | N | 1407.0 | NaN | 해운대두산위브더제니스 103동 51층 5103호 | 아파트 | 2011-12-16 00:00:00 | 70 | 51 | NaN | N | 마린시티2로 | 33.0 | NaN | 2017-03-30 00:00:00 | 배당 | 35.156633 | 129.145068 | 971889999 | 3 | 3 |
+| 2 | 2197 | 임의 | 개별 | 11326510 | 혜림감정 | 2016-11-22 00:00:00 | 3 | 2 | 149683.1 | 71.00 | 71.00 | 49.94 | 49.94 | 119000000 | 76160000 | 2017-07-28 | 2017-10-13 | 낙찰 | 국민은행 | 부산 | 사상구 | 모라동 | NaN | N | 552.0 | NaN | 백양그린 206동 14층 1403호 | 아파트 | 1992-07-31 00:00:00 | 15 | 14 | NaN | N | 모라로110번길 | 88.0 | NaN | 2017-12-13 00:00:00 | 배당 | 35.184601 | 128.996765 | 93399999 | 4 | 4 |
+| 3 | 2642 | 임의 | 일반 | 183581724 | 신라감정 | 2016-12-13 00:00:00 | 2 | 1 | 24405.0 | 32.98 | 32.98 | 84.91 | 84.91 | 288400000 | 230720000 | 2017-07-20 | 2017-11-02 | 낙찰 | 고려저축은행 | 부산 | 남구 | 대연동 | NaN | N | 243.0 | 23.0 | 대연청구 109동 11층 1102호 | 아파트 | 2001-07-13 00:00:00 | 20 | 11 | NaN | N | 황령대로319번가길 | 110.0 | NaN | 2017-12-27 00:00:00 | 배당 | 35.154180 | 129.089081 | 256899000 | 3 | 3 |
+| 4 | 1958 | 강제 | 일반 | 45887671 | 나라감정 | 2016-03-07 00:00:00 | 2 | 1 | 774.0 | 45.18 | 45.18 | 84.96 | 84.96 | 170000000 | 136000000 | 2016-07-06 | 2016-08-03 | 낙찰 | Private | 부산 | 사하구 | 괴정동 | NaN | N | 399.0 | 2.0 | 동조리젠시 7층 703호 | 아파트 | 2001-11-27 00:00:00 | 7 | 7 | NaN | N | 오작로 | 51.0 | NaN | 2016-10-04 00:00:00 | 배당 | 35.099630 | 128.998874 | 158660000 | 2 | 2 |
+
+날짜를 Monday=0에서 Sunday=7으로 인코딩하였다. 추가 분석을 위해 경매 기간 변수도 추가하겠다.
+
+
+
+```python
+#초기값 지정
+df['auction_start_day']=0
+df['auction_end_day']=0
+
+
+for i in range(0,len(df)):
+    #날짜 값들을 date형식으로 남기기
+    df['auction_start_day'][i]=datetime(a_s[0][i], a_s[1][i], a_s[2][i])
+    df['auction_end_day'][i]=datetime(a_e[0][i], a_e[1][i], a_e[2][i])
+    
+
+#초기값 지정
+df['auction_day_length']=0
+for i in range(0,len(df)):
+    df['auction_day_length'][i]=(df['auction_end_day'][i]-df['auction_start_day'][i]).days
+    
+
+#https://stackoverflow.com/questions/151199/how-to-calculate-number-of-days-between-two-given-dates
+```
+
+```python
+df.head()
+```
+
+|  | Auction\_key | Auction\_class | Bid\_class | Claim\_price | Appraisal\_company | Appraisal\_date | Auction\_count | Auction\_miscarriage\_count | Total\_land\_gross\_area | Total\_land\_real\_area | Total\_land\_auction\_area | Total\_building\_area | Total\_building\_auction\_area | Total\_appraisal\_price | Minimum\_sales\_price | First\_auction\_date | Final\_auction\_date | Final\_result | Creditor | addr\_do | addr\_si | addr\_dong | addr\_li | addr\_san | addr\_bunji1 | addr\_bunji2 | addr\_etc | Apartment\_usage | Preserve\_regist\_date | Total\_floor | Current\_floor | Specific | Share\_auction\_YorN | road\_name | road\_bunji1 | road\_bunji2 | Close\_date | Close\_result | point.y | point.x | Hammer\_price | auction\_start\_weekday | auction\_end\_weekday | auction\_start\_day | auction\_end\_day | auction\_day\_length |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| 0 | 2687 | 임의 | 개별 | 1766037301 | 정명감정 | 2017-07-26 00:00:00 | 2 | 1 | 12592.0 | 37.35 | 37.35 | 181.77 | 181.77 | 836000000 | 668800000 | 2018-02-13 | 2018-03-20 | 낙찰 | 베리타스자산관리대부 | 부산 | 해운대구 | 우동 | NaN | N | 1398.0 | NaN | 해운대엑소디움 5층 101-502호 | 주상복합 | 2009-07-14 00:00:00 | 45 | 5 | NaN | N | 해운대해변로 | 30.0 | NaN | 2018-06-14 00:00:00 | 배당 | 35.162717 | 129.137048 | 760000000 | 1 | 1 | 2018-02-13 00:00:00 | 2018-03-20 00:00:00 | 35 |
+| 1 | 2577 | 임의 | 일반 | 152946867 | 희감정 | 2016-09-12 00:00:00 | 2 | 1 | 42478.1 | 18.76 | 18.76 | 118.38 | 118.38 | 1073000000 | 858400000 | 2016-12-29 | 2017-02-02 | 낙찰 | 흥국저축은행 | 부산 | 해운대구 | 우동 | NaN | N | 1407.0 | NaN | 해운대두산위브더제니스 103동 51층 5103호 | 아파트 | 2011-12-16 00:00:00 | 70 | 51 | NaN | N | 마린시티2로 | 33.0 | NaN | 2017-03-30 00:00:00 | 배당 | 35.156633 | 129.145068 | 971889999 | 3 | 3 | 2016-12-29 00:00:00 | 2017-02-02 00:00:00 | 35 |
+| 2 | 2197 | 임의 | 개별 | 11326510 | 혜림감정 | 2016-11-22 00:00:00 | 3 | 2 | 149683.1 | 71.00 | 71.00 | 49.94 | 49.94 | 119000000 | 76160000 | 2017-07-28 | 2017-10-13 | 낙찰 | 국민은행 | 부산 | 사상구 | 모라동 | NaN | N | 552.0 | NaN | 백양그린 206동 14층 1403호 | 아파트 | 1992-07-31 00:00:00 | 15 | 14 | NaN | N | 모라로110번길 | 88.0 | NaN | 2017-12-13 00:00:00 | 배당 | 35.184601 | 128.996765 | 93399999 | 4 | 4 | 2017-07-28 00:00:00 | 2017-10-13 00:00:00 | 77 |
+| 3 | 2642 | 임의 | 일반 | 183581724 | 신라감정 | 2016-12-13 00:00:00 | 2 | 1 | 24405.0 | 32.98 | 32.98 | 84.91 | 84.91 | 288400000 | 230720000 | 2017-07-20 | 2017-11-02 | 낙찰 | 고려저축은행 | 부산 | 남구 | 대연동 | NaN | N | 243.0 | 23.0 | 대연청구 109동 11층 1102호 | 아파트 | 2001-07-13 00:00:00 | 20 | 11 | NaN | N | 황령대로319번가길 | 110.0 | NaN | 2017-12-27 00:00:00 | 배당 | 35.154180 | 129.089081 | 256899000 | 3 | 3 | 2017-07-20 00:00:00 | 2017-11-02 00:00:00 | 105 |
+| 4 | 1958 | 강제 | 일반 | 45887671 | 나라감정 | 2016-03-07 00:00:00 | 2 | 1 | 774.0 | 45.18 | 45.18 | 84.96 | 84.96 | 170000000 | 136000000 | 2016-07-06 | 2016-08-03 | 낙찰 | Private | 부산 | 사하구 | 괴정동 | NaN | N | 399.0 | 2.0 | 동조리젠시 7층 703호 | 아파트 | 2001-11-27 00:00:00 | 7 | 7 | NaN | N | 오작로 | 51.0 | NaN | 2016-10-04 00:00:00 | 배당 | 35.099630 | 128.998874 | 158660000 | 2 | 2 | 2016-07-06 00:00:00 | 2016-08-03 00:00:00 | 28 |
+
+```python
+#이제 분석에 필요없는 변수이므로 제거 (이후 데이터프레임 형성 편의를 위한 과정)
+del df['auction_start_day']
+del df['auction_end_day']
+```
+
+### 3-2 Bid Class 인코딩
+
+```python
+#Bid_class를 숫자로 변환하겠다.
+df['Bid']=0
+for i in range(0,len(df)):
+        if df['Bid_class'][i]=='일반':
+            df['Bid'][i]=0
+        elif df['Bid_class'][i]=='개별':
+            df['Bid'][i]=1
+        else: df['Bid'][i]=2
+```
+
+```python
+df.head() #변수가 잘 생성되었는지 확인
+```
+
+|  | Auction\_key | Auction\_class | Bid\_class | Claim\_price | Appraisal\_company | Appraisal\_date | Auction\_count | Auction\_miscarriage\_count | Total\_land\_gross\_area | Total\_land\_real\_area | Total\_land\_auction\_area | Total\_building\_area | Total\_building\_auction\_area | Total\_appraisal\_price | Minimum\_sales\_price | First\_auction\_date | Final\_auction\_date | Final\_result | Creditor | addr\_do | addr\_si | addr\_dong | addr\_li | addr\_san | addr\_bunji1 | addr\_bunji2 | addr\_etc | Apartment\_usage | Preserve\_regist\_date | Total\_floor | Current\_floor | Specific | Share\_auction\_YorN | road\_name | road\_bunji1 | road\_bunji2 | Close\_date | Close\_result | point.y | point.x | Hammer\_price | auction\_start\_weekday | auction\_end\_weekday | auction\_day\_length | Bid |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| 0 | 2687 | 임의 | 개별 | 1766037301 | 정명감정 | 2017-07-26 00:00:00 | 2 | 1 | 12592.0 | 37.35 | 37.35 | 181.77 | 181.77 | 836000000 | 668800000 | 2018-02-13 | 2018-03-20 | 낙찰 | 베리타스자산관리대부 | 부산 | 해운대구 | 우동 | NaN | N | 1398.0 | NaN | 해운대엑소디움 5층 101-502호 | 주상복합 | 2009-07-14 00:00:00 | 45 | 5 | NaN | N | 해운대해변로 | 30.0 | NaN | 2018-06-14 00:00:00 | 배당 | 35.162717 | 129.137048 | 760000000 | 1 | 1 | 35 | 1 |
+| 1 | 2577 | 임의 | 일반 | 152946867 | 희감정 | 2016-09-12 00:00:00 | 2 | 1 | 42478.1 | 18.76 | 18.76 | 118.38 | 118.38 | 1073000000 | 858400000 | 2016-12-29 | 2017-02-02 | 낙찰 | 흥국저축은행 | 부산 | 해운대구 | 우동 | NaN | N | 1407.0 | NaN | 해운대두산위브더제니스 103동 51층 5103호 | 아파트 | 2011-12-16 00:00:00 | 70 | 51 | NaN | N | 마린시티2로 | 33.0 | NaN | 2017-03-30 00:00:00 | 배당 | 35.156633 | 129.145068 | 971889999 | 3 | 3 | 35 | 0 |
+| 2 | 2197 | 임의 | 개별 | 11326510 | 혜림감정 | 2016-11-22 00:00:00 | 3 | 2 | 149683.1 | 71.00 | 71.00 | 49.94 | 49.94 | 119000000 | 76160000 | 2017-07-28 | 2017-10-13 | 낙찰 | 국민은행 | 부산 | 사상구 | 모라동 | NaN | N | 552.0 | NaN | 백양그린 206동 14층 1403호 | 아파트 | 1992-07-31 00:00:00 | 15 | 14 | NaN | N | 모라로110번길 | 88.0 | NaN | 2017-12-13 00:00:00 | 배당 | 35.184601 | 128.996765 | 93399999 | 4 | 4 | 77 | 1 |
+| 3 | 2642 | 임의 | 일반 | 183581724 | 신라감정 | 2016-12-13 00:00:00 | 2 | 1 | 24405.0 | 32.98 | 32.98 | 84.91 | 84.91 | 288400000 | 230720000 | 2017-07-20 | 2017-11-02 | 낙찰 | 고려저축은행 | 부산 | 남구 | 대연동 | NaN | N | 243.0 | 23.0 | 대연청구 109동 11층 1102호 | 아파트 | 2001-07-13 00:00:00 | 20 | 11 | NaN | N | 황령대로319번가길 | 110.0 | NaN | 2017-12-27 00:00:00 | 배당 | 35.154180 | 129.089081 | 256899000 | 3 | 3 | 105 | 0 |
+| 4 | 1958 | 강제 | 일반 | 45887671 | 나라감정 | 2016-03-07 00:00:00 | 2 | 1 | 774.0 | 45.18 | 45.18 | 84.96 | 84.96 | 170000000 | 136000000 | 2016-07-06 | 2016-08-03 | 낙찰 | Private | 부산 | 사하구 | 괴정동 | NaN | N | 399.0 | 2.0 | 동조리젠시 7층 703호 | 아파트 | 2001-11-27 00:00:00 | 7 | 7 | NaN | N | 오작로 | 51.0 | NaN | 2016-10-04 00:00:00 | 배당 | 35.099630 | 128.998874 | 158660000 | 2 | 2 | 28 | 0 |
+
+Bid라는 변수에 입찰 구분 중 일반=0, 개별=1, 일괄=2로 인코딩하였다.
+
+### 3-3. 건물\(토지\)의 대표 용도 인코딩
+
+```text
+df.groupby('Apartment_usage').count()
+```
+
+|  | Auction\_key | Auction\_class | Bid\_class | Claim\_price | Appraisal\_company | Appraisal\_date | Auction\_count | Auction\_miscarriage\_count | Total\_land\_gross\_area | Total\_land\_real\_area | Total\_land\_auction\_area | Total\_building\_area | Total\_building\_auction\_area | Total\_appraisal\_price | Minimum\_sales\_price | First\_auction\_date | Final\_auction\_date | Final\_result | Creditor | addr\_do | addr\_si | addr\_dong | addr\_li | addr\_san | addr\_bunji1 | addr\_bunji2 | addr\_etc | Preserve\_regist\_date | Total\_floor | Current\_floor | Specific | Share\_auction\_YorN | road\_name | road\_bunji1 | road\_bunji2 | Close\_date | Close\_result | point.y | point.x | Hammer\_price | auction\_start\_weekday | auction\_end\_weekday | auction\_day\_length | Bid |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| Apartment\_usage |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| 아파트 | 1654 | 1654 | 1654 | 1654 | 1654 | 1654 | 1654 | 1654 | 1654 | 1654 | 1654 | 1654 | 1654 | 1654 | 1654 | 1654 | 1654 | 1654 | 1654 | 1654 | 1654 | 1654 | 22 | 1654 | 1651 | 686 | 1654 | 1654 | 1654 | 1654 | 41 | 1654 | 1654 | 1647 | 129 | 1654 | 1654 | 1654 | 1654 | 1654 | 1654 | 1654 | 1654 | 1654 |
+| 주상복합 | 277 | 277 | 277 | 277 | 277 | 277 | 277 | 277 | 277 | 277 | 277 | 277 | 277 | 277 | 277 | 277 | 277 | 277 | 277 | 277 | 277 | 277 | 1 | 277 | 276 | 201 | 277 | 277 | 277 | 277 | 21 | 277 | 277 | 261 | 26 | 277 | 277 | 277 | 277 | 277 | 277 | 277 | 277 | 27 |
+
+건물\(토지\)의 대표 용도를 grouping하여 count한 결과 '아파트'와 '주상복합' 두 가지로 나뉨을 알 수 있다. 이를 인코딩하겠다.
+
+```python
+#Apartment usage 인코딩
+df['Use']=0
+for i in range(0,len(df)):
+        if df['Apartment_usage'][i]=='아파트':
+            df['Use'][i]=0
+        else: df['Use'][i]=1
+```
+
+```text
+df.head()  #변수가 잘 생성되었는지 확인
+```
+
+|  | Auction\_key | Auction\_class | Bid\_class | Claim\_price | Appraisal\_company | Appraisal\_date | Auction\_count | Auction\_miscarriage\_count | Total\_land\_gross\_area | Total\_land\_real\_area | Total\_land\_auction\_area | Total\_building\_area | Total\_building\_auction\_area | Total\_appraisal\_price | Minimum\_sales\_price | First\_auction\_date | Final\_auction\_date | Final\_result | Creditor | addr\_do | addr\_si | addr\_dong | addr\_li | addr\_san | addr\_bunji1 | addr\_bunji2 | addr\_etc | Apartment\_usage | Preserve\_regist\_date | Total\_floor | Current\_floor | Specific | Share\_auction\_YorN | road\_name | road\_bunji1 | road\_bunji2 | Close\_date | Close\_result | point.y | point.x | Hammer\_price | auction\_start\_weekday | auction\_end\_weekday | auction\_day\_length | Bid | Use |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| 0 | 2687 | 임의 | 개별 | 1766037301 | 정명감정 | 2017-07-26 00:00:00 | 2 | 1 | 12592.0 | 37.35 | 37.35 | 181.77 | 181.77 | 836000000 | 668800000 | 2018-02-13 | 2018-03-20 | 낙찰 | 베리타스자산관리대부 | 부산 | 해운대구 | 우동 | NaN | N | 1398.0 | NaN | 해운대엑소디움 5층 101-502호 | 주상복합 | 2009-07-14 00:00:00 | 45 | 5 | NaN | N | 해운대해변로 | 30.0 | NaN | 2018-06-14 00:00:00 | 배당 | 35.162717 | 129.137048 | 760000000 | 1 | 1 | 35 | 1 | 1 |
+| 1 | 2577 | 임의 | 일반 | 152946867 | 희감정 | 2016-09-12 00:00:00 | 2 | 1 | 42478.1 | 18.76 | 18.76 | 118.38 | 118.38 | 1073000000 | 858400000 | 2016-12-29 | 2017-02-02 | 낙찰 | 흥국저축은행 | 부산 | 해운대구 | 우동 | NaN | N | 1407.0 | NaN | 해운대두산위브더제니스 103동 51층 5103호 | 아파트 | 2011-12-16 00:00:00 | 70 | 51 | NaN | N | 마린시티2로 | 33.0 | NaN | 2017-03-30 00:00:00 | 배당 | 35.156633 | 129.145068 | 971889999 | 3 | 3 | 35 | 0 | 0 |
+| 2 | 2197 | 임의 | 개별 | 11326510 | 혜림감정 | 2016-11-22 00:00:00 | 3 | 2 | 149683.1 | 71.00 | 71.00 | 49.94 | 49.94 | 119000000 | 76160000 | 2017-07-28 | 2017-10-13 | 낙찰 | 국민은행 | 부산 | 사상구 | 모라동 | NaN | N | 552.0 | NaN | 백양그린 206동 14층 1403호 | 아파트 | 1992-07-31 00:00:00 | 15 | 14 | NaN | N | 모라로110번길 | 88.0 | NaN | 2017-12-13 00:00:00 | 배당 | 35.184601 | 128.996765 | 93399999 | 4 | 4 | 77 | 1 | 0 |
+| 3 | 2642 | 임의 | 일반 | 183581724 | 신라감정 | 2016-12-13 00:00:00 | 2 | 1 | 24405.0 | 32.98 | 32.98 | 84.91 | 84.91 | 288400000 | 230720000 | 2017-07-20 | 2017-11-02 | 낙찰 | 고려저축은행 | 부산 | 남구 | 대연동 | NaN | N | 243.0 | 23.0 | 대연청구 109동 11층 1102호 | 아파트 | 2001-07-13 00:00:00 | 20 | 11 | NaN | N | 황령대로319번가길 | 110.0 | NaN | 2017-12-27 00:00:00 | 배당 | 35.154180 | 129.089081 | 256899000 | 3 | 3 | 105 | 0 | 0 |
+| 4 | 1958 | 강제 | 일반 | 45887671 | 나라감정 | 2016-03-07 00:00:00 | 2 | 1 | 774.0 | 45.18 | 45.18 | 84.96 | 84.96 | 170000000 | 136000000 | 2016-07-06 | 2016-08-03 | 낙찰 | Private | 부산 | 사하구 | 괴정동 | NaN | N | 399.0 | 2.0 | 동조리젠시 7층 703호 | 아파트 | 2001-11-27 00:00:00 | 7 | 7 | NaN | N | 오작로 | 51.0 | NaN | 2016-10-04 00:00:00 | 배당 | 35.099630 | 128.998874 | 158660000 | 2 | 2 | 28 | 0 | 0 |
+
+## 4. 선형 회귀 분석
+
+우선 회귀 분석에 사용할 데이터만 따로 data에 저장하겠다.
+
+```python
+data=df2_s.copy()
+
+columns = df.iloc[:,-5:-1]
+data = pd.concat([data,columns], axis = 1)  #-4:-1의 범위로 지정해서 마지막 column이 안보여서 아래에 다시 concat 진행
+
+lastcol=df.iloc[:,-1]
+data = pd.concat([data,lastcol], axis = 1)
+
+data.info()
+
+
+#https://stackoverflow.com/questions/33532216/adding-columns-from-one-dataframe-to-another-python-pandas
+```
+
+```text
+<class 'pandas.core.frame.DataFrame'>
+Int64Index: 1933 entries, 0 to 1932
+Data columns (total 12 columns):
+Total_land_real_area           1929 non-null float64
+Total_land_auction_area        1929 non-null float64
+Total_building_area            1929 non-null float64
+Total_building_auction_area    1929 non-null float64
+Total_appraisal_price          1929 non-null float64
+Minimum_sales_price            1929 non-null float64
+Hammer_price                   1929 non-null float64
+auction_start_weekday          1931 non-null float64
+auction_end_weekday            1931 non-null float64
+auction_day_length             1931 non-null float64
+Bid                            1931 non-null float64
+Use                            1931 non-null float64
+dtypes: float64(12)
+memory usage: 196.3 KB
+```
+
+```python
+#Inf, -Inf를 NaN으로 처리 후 제거하기
+import numpy as np
+data=data.replace([-np.inf,np.inf], np.nan)
+data=data.dropna(axis=0)
+data.info()
+
+#6줄이 제거됨
+```
+
+```text
+<class 'pandas.core.frame.DataFrame'>
+Int64Index: 1927 entries, 0 to 1930
+Data columns (total 12 columns):
+Total_land_real_area           1927 non-null float64
+Total_land_auction_area        1927 non-null float64
+Total_building_area            1927 non-null float64
+Total_building_auction_area    1927 non-null float64
+Total_appraisal_price          1927 non-null float64
+Minimum_sales_price            1927 non-null float64
+Hammer_price                   1927 non-null float64
+auction_start_weekday          1927 non-null float64
+auction_end_weekday            1927 non-null float64
+auction_day_length             1927 non-null float64
+Bid                            1927 non-null float64
+Use                            1927 non-null float64
+dtypes: float64(12)
+memory usage: 195.7 KB
+```
+
+모델의 적합성 검증을 위하여 train & test data split을 진행해준다.
+
+```python
+x = data.drop('Hammer_price', axis=1)
+y = data.Hammer_price
+```
+
+```python
+# train, test data 분할
+from sklearn.model_selection import train_test_split
+
+x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=0)  #test data size는 전체의 20%
+```
+
+회귀적합
+
+```python
+from sklearn.linear_model import LinearRegression
+
+#모델 불러옴
+model = LinearRegression()
+#train data에 fit시킴
+model.fit(x_train, y_train)
+```
+
+```python
+#fit된 모델의 R-square
+model.score(x_train, y_train)
+```
+
+세상에 r square 값이 0.99가 나왔다. 너무 높다.
+
+```python
+sns.pairplot(x)
+```
+
+![](.gitbook/assets/image%20%286%29.png)
+
+r square가 높게 나온 이유는 서로 관련 있는 변수들이 많아서 생긴다고 볼 수도 있다. 이 데이터에서는 price관련된 변수가 3개, area 관련 변수가 4개가 있으며 서로 관련성이 큰데, 위의 pairplot에서 거의 직선으로 보이는 변수들로 얼마나 상관이 있는지 판단 가능하다. 더 정확한 판단을 위하여 VIF 검정을 진행해본다.
+
+```python
+#VIF확인하기
+from statsmodels.stats.outliers_influence import variance_inflation_factor
+
+vif = pd.DataFrame()
+vif["VIF Factor"] = [variance_inflation_factor(x.values, i) for i in range(x.shape[1])]
+vif["features"] = x.columns
+vif.sort_values(["VIF Factor"], ascending=[False])
+```
+
+|  | VIF Factor | features |
+| :--- | :--- | :--- |
+| 0 | 463.486981 | Total\_land\_real\_area |
+| 1 | 462.807904 | Total\_land\_auction\_area |
+| 3 | 449.634387 | Total\_building\_auction\_area |
+| 2 | 415.396782 | Total\_building\_area |
+| 4 | 305.326164 | Total\_appraisal\_price |
+| 5 | 301.975570 | Minimum\_sales\_price |
+| 7 | 32.703886 | auction\_end\_weekday |
+| 6 | 32.661878 | auction\_start\_weekday |
+| 8 | 1.330857 | auction\_day\_length |
+| 10 | 1.294741 | Use |
+| 9 | 1.184722 | Bid |
+
+...ㅎㅎㅎ 당연하지만 10이 훨씬 넘는다. 참고로 경매가 시작되는 요일과 끝나는 요일은 같다. 그러므로 총 경매 기간 변수를 추가하고 끝나는 요일 변수를 제거하겠다.
+
+```python
+data1=data.copy()
+
+del data1['Total_building_auction_area'] #이것의 분포가 더 특정값에 치우쳐져 있었으므로 제거
+del data1['Total_land_auction_area'] #위에 제거하는 변수와 관련이 있어보여 real area 말고 auction area delete
+del data1['Minimum_sales_price'] #Hammer Price가 Target이므로 Minimum sales price를 제거
+del data1['auction_end_weekday'] #경매가 끝나는 요일 제거(경매 시작 요일과 동일)
+
+data1.info()
+```
+
+```python
+#다시 회귀 모델링
+x = data1.drop('Hammer_price', axis=1)
+y = data1.Hammer_price
+
+# train, test data 분할
+x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=0)  #test data size는 전체의 20%
+
+#모델 불러옴
+model = LinearRegression()
+#train data에 fit시킴
+model.fit(x_train, y_train)
+
+#fit된 모델의 R-square
+model.score(x_train, y_train)
+```
+
+Output : 
+
+```text
+0.9700522755627569
+```
+
+잘 나온 것 같다.
+
+```python
+vif = pd.DataFrame()
+vif["VIF Factor"] = [variance_inflation_factor(x.values, i) for i in range(x.shape[1])]
+vif["features"] = x.columns
+vif.sort_values(["VIF Factor"], ascending=[False])
+```
+
+|  | VIF Factor | features |
+| :--- | :--- | :--- |
+| 1 | 6.563827 | Total\_building\_area |
+| 0 | 6.314295 | Total\_land\_real\_area |
+| 2 | 3.861034 | Total\_appraisal\_price |
+| 3 | 2.541604 | auction\_start\_weekday |
+| 6 | 1.287799 | Use |
+| 4 | 1.250202 | auction\_day\_length |
+| 5 | 1.168293 | Bid |
+
+VIF도 확 줄어듦을 알 수 있다. 모두 10 미만이므로 다중공선성이 해결되었다고 볼 수 있다.
+
+이를 바탕으로 분석을 진행하겠다.
+
+### by sklearn
+
+```python
+#MSE
+import sklearn as sk
+sk.metrics.mean_squared_error(y_train, model.predict(x_train))
+```
+
+Output : 
+
+```text
+0.021966726224034304
+```
+
+```python
+#beta hat
+print(model.intercept_); print(model.coef_)
+```
+
+Output : 
+
+```text
+0.3850703572670273
+[ 1.31329416e-01 -4.14035077e-01  1.06477497e+00 -3.25654091e-03
+ -1.80639852e-04 -5.05362126e-02 -2.31552468e-02]
+```
+
+```python
+#test데이터 R-square
+model.score(x_test, y_test)
+```
+
+Output : 
+
+```text
+0.9676691334932952
+```
+
+```python
+# 예측 vs. 실제데이터 plot
+y_pred = model.predict(x_test) 
+plt.plot(y_test, y_pred, '.')
+
+# 예측과 실제가 비슷하면, 라인상에 분포함
+x = np.linspace(-8, 1, 100)
+y = x
+plt.plot(x, y)
+plt.show()
+```
+
+![](.gitbook/assets/image%20%282%29.png)
+
+아주 잘 추정되었고 모델링도 아주 잘된 것으로 보인다. :3
+
+### by calculation of matrix
+
+```python
+import numpy as np
+from numpy.linalg import inv 
+
+def estimate_beta(x, y):
+    y=y_train.values.reshape(-1,1)
+    beta_hat=inv(x.T@x)@x.T@y
+    return beta_hat
+
+#https://stackoverflow.com/questions/53723928/attributeerror-series-object-has-no-attribute-reshape  ##reshaping
+```
+
+```python
+#beta hat by matrix calculation
+betahat=estimate_beta(x_train,y_train)
+betahat
+```
+
+Output : 
+
+```text
+array([[ 2.15598318e-01],
+       [ 6.70786521e-03],
+       [ 9.77307539e-01],
+       [-7.22238005e-03],
+       [-1.66612830e-04],
+       [-4.01543060e-02],
+       [-1.71396365e-02]])
+```
+
+```python
+#MSE by matrix calculation
+e=y_train.values.reshape(-1,1)-x_train@betahat
+mse=e.T@e/(len(x_train)-len(betahat)-1)
+print(mse)
+```
+
+Output :
+
+```text
+          0
+0  0.024926
+```
+
+### 비교
+
+```python
+from sklearn.linear_model import LinearRegression
+
+model2 = LinearRegression(fit_intercept=False)
+#train data에 fit시킴
+
+model2.fit(x_train, y_train)
+model2.score(x_train, y_train)
+
+#betahat by sklearn without intercept 
+print(model2.coef_)
+```
+
+Output : 
+
+```text
+[ 2.15598318e-01  6.70786521e-03  9.77307539e-01 -7.22238005e-03
+ -1.66612830e-04 -4.01543060e-02 -1.71396365e-02]
+```
+
+```python
+#MSE by sklearn without intercept 
+sk.metrics.mean_squared_error(y_train, model2.predict(x_train))
+```
+
+Output : 
+
+```text
+0.02479706560872116
+```
+
+행렬로 계산한 betahat는 sklearn을 통한 계산 결과와 일치하며, MSE도 크게 다르지 않음을 알 수 있다.
 
