@@ -190,10 +190,6 @@ Share\_auction\_YorN
 
 정도로 볼 수 있다.
 
-In \[ \]:
-
-In \[ \]:
-
 #### 4.1 ~ 4.5 시각화 + Feature 생성[¶]()
 
 **4.1 Hammer\_price에서의 아웃라이어 + Hammer\_price\_log Feature 생성¶**
