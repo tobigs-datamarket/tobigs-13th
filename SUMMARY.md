@@ -2,4 +2,5 @@
 
 * [Tobigs](README.md)
 * [Python을 이용한 전처리와 시각화](untitled-1.md)
+* [로지스틱 회귀](undefined.md)
 

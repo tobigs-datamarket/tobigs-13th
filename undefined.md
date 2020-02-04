@@ -1,4 +1,4 @@
-# Python을 이용한 전처리와 시각화
+# 로지스틱 회귀
 
 ```python
 # 데이터프레임 관련 패키지 import
@@ -260,5 +260,104 @@ df2.head()
 | 3 | 32.98 | 32.98 | 84.91 | 84.91 | 288400000 | 230720000 | 256899000 |
 | 4 | 45.18 | 45.18 | 84.96 | 84.96 | 170000000 | 136000000 | 158660000 |
 
+```python
+##정규화##
+from sklearn.preprocessing import MinMaxScaler   #MinMaxScaler import
+scaler=MinMaxScaler() #scaler라는 변수로 간편하게 설정가능하도록 입력
 
+
+scaled=scaler.fit_transform(df2)   #정규화
+df2_s = pd.DataFrame(scaled, index=df2.index, columns=df2.columns)
+df2_s.head()
+
+#https://soo-jjeong.tistory.com/122   ##정규화
+#정규화된 결과값(array형태)를 원래의 dataframe 형태로 변환
+#https://stackoverflow.com/questions/35723472/how-to-use-sklearn-fit-transform-with-pandas-and-return-dataframe-instead-of-nu
+```
+
+|  | Total\_land\_real\_area | Total\_land\_auction\_area | Total\_building\_area | Total\_building\_auction\_area | Total\_appraisal\_price | Minimum\_sales\_price | Hammer\_price |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| 0 | 0.171330 | 0.171330 | 0.590181 | 0.600960 | 0.149435 | 0.149272 | 0.155187 |
+| 1 | 0.086055 | 0.086055 | 0.373151 | 0.389639 | 0.192018 | 0.191862 | 0.198816 |
+| 2 | 0.325688 | 0.325688 | 0.138832 | 0.161483 | 0.020611 | 0.016145 | 0.017933 |
+| 3 | 0.151284 | 0.151284 | 0.258559 | 0.278061 | 0.051047 | 0.050865 | 0.051598 |
+| 4 | 0.207248 | 0.207248 | 0.258730 | 0.278228 | 0.029774 | 0.029587 | 0.031370 |
+
+MinMax Scaler는 \(x - min\)/\(max-min\) 의 값을 나타낸 것으로 데이터를 0과 1사이의 범위로 맞춰 scaling하는 것이다. scaling의 다른 방식인 standard scaler는 평균=0, 분산=1로 scaling 하는 것이며 from sklearn.preprocessing import StandardScaler 로 import 가능하다.
+
+```python
+plt.rcParams['figure.figsize'] = (14.0, 8.0)
+df2_s.plot.hist(subplots=True, legend=True, layout=(3, 3))
+
+#figure size 조정
+#https://harangdev.github.io/applied-data-science-with-python/applied-data-plotting-in-python/3/
+```
+
+![](.gitbook/assets/image%20%288%29.png)
+
+위와같이 scaling은 히스토그램에 영향이 없다. 변수 변환을 통해 히스토그램을 좀 더 이쁘게 변환해보겠다.
+
+### 변수 변환 - log를 취하여 그래프 변환
+
+```python
+df2_s.head()
+```
+
+| Total\_land\_real\_area | Total\_land\_auction\_area | Total\_building\_area | Total\_building\_auction\_area | Total\_appraisal\_price | Minimum\_sales\_price | Hammer\_price |  |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| 0 | 0.171330 | 0.171330 | 0.590181 | 0.600960 | 0.149435 | 0.149272 | 0.155187 |
+| 1 | 0.086055 | 0.086055 | 0.373151 | 0.389639 | 0.192018 | 0.191862 | 0.198816 |
+| 2 | 0.325688 | 0.325688 | 0.138832 | 0.161483 | 0.020611 | 0.016145 | 0.017933 |
+| 3 | 0.151284 | 0.151284 | 0.258559 | 0.278061 | 0.051047 | 0.050865 | 0.051598 |
+| 4 | 0.207248 | 0.207248 | 0.258730 | 0.278228 | 0.029774 | 0.029587 | 0.031370 |
+
+```python
+import numpy as np
+
+df2_s['Total_appraisal_price']=np.log(df2_s['Total_appraisal_price'])
+df2_s['Minimum_sales_price']=np.log(df2_s['Minimum_sales_price'])
+df2_s['Hammer_price']=np.log(df2_s['Hammer_price'])
+
+df2_s.info()
+```
+
+```text
+<class 'pandas.core.frame.DataFrame'>
+Int64Index: 1931 entries, 0 to 1932
+Data columns (total 7 columns):
+Total_land_real_area           1931 non-null float64
+Total_land_auction_area        1931 non-null float64
+Total_building_area            1931 non-null float64
+Total_building_auction_area    1931 non-null float64
+Total_appraisal_price          1931 non-null float64
+Minimum_sales_price            1931 non-null float64
+Hammer_price                   1931 non-null float64
+dtypes: float64(7)
+memory usage: 200.7 KB
+```
+
+```python
+#Inf, -Inf를 NaN으로 처리 후 제거하기
+import numpy as np
+df2_s=df2_s.replace([-np.inf,np.inf], np.nan)
+df2_s=df2_s.dropna(axis=0)
+df2_s.info()
+
+#-Inf 값이 나와 제거를 하니 2 줄이 제거됨을 알 수 있다.
+```
+
+```text
+<class 'pandas.core.frame.DataFrame'>
+Int64Index: 1929 entries, 0 to 1932
+Data columns (total 7 columns):
+Total_land_real_area           1929 non-null float64
+Total_land_auction_area        1929 non-null float64
+Total_building_area            1929 non-null float64
+Total_building_auction_area    1929 non-null float64
+Total_appraisal_price          1929 non-null float64
+Minimum_sales_price            1929 non-null float64
+Hammer_price                   1929 non-null float64
+dtypes: float64(7)
+memory usage: 120.6 KB
+```
 
