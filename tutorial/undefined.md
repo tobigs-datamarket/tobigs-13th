@@ -1,4 +1,4 @@
-# Python을 이용한 선형회귀분석 구현\(sklearn\)
+# Python을 이용한 선형회귀분석 구현\(Sklearn\)
 
 ```python
 # 데이터프레임 관련 패키지 import
