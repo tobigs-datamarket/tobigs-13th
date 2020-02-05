@@ -21,3 +21,6 @@
 | 2주차 | [로지스틱회귀 (2)](https://github.com/tobigs-datamarket/tobigs-13rd/blob/master/2%EC%A3%BC%EC%B0%A8/week2_logistic_regression_assignment2_%EC%9D%B4%EC%A7%80%EC%9A%A9.ipynb) |  13기 이지용  |
 
 
+
+
+[공식 홈페이지](http://www.datamarket.kr/xe/page_QEhq64)
