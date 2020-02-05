@@ -17,7 +17,7 @@
 | 1주차 | [전처리와 EDA](https://github.com/tobigs-datamarket/tobigs-13rd/blob/master/1%EC%A3%BC%EC%B0%A8/%EC%A0%84%EC%B2%98%EB%A6%AC%EC%99%80%20EDA_13%EA%B8%B0%20%EC%A1%B0%EC%83%81%EC%97%B0.ipynb) | 13기 조상연 |
 | 2주차 | [회귀분석 \(1\)](https://github.com/tobigs-datamarket/tobigs-13rd/blob/master/2%EC%A3%BC%EC%B0%A8/A2_Auction_Regression.ipynb) | 13기 김현선 |
 | 2주차 | [회귀분석 \(2\)](https://github.com/tobigs-datamarket/tobigs-13rd/tree/925c8f628f5d835fafd221e17af19ca90548192a/링크/README.md) | 12기 김효은 |
-| 2주차 | [로지스틱회귀 (1)]https://github.com/tobigs-datamarket/tobigs-13rd/blob/master/2%EC%A3%BC%EC%B0%A8/week2_Logistic_assignment1_%EA%B9%80%ED%9A%A8%EC%9D%80.ipynb |  12기 김효은  |
-| 2주차 | [로지스틱회귀 (2)]https://github.com/tobigs-datamarket/tobigs-13rd/blob/master/2%EC%A3%BC%EC%B0%A8/week2_Logistic_assignment1_%EA%B9%80%ED%9A%A8%EC%9D%80.ipynb |  13기   |
+| 2주차 | [로지스틱회귀 (1)](https://github.com/tobigs-datamarket/tobigs-13rd/blob/master/2%EC%A3%BC%EC%B0%A8/week2_Logistic_assignment1_%EA%B9%80%ED%9A%A8%EC%9D%80.ipynb) |  12기 김효은  |
+| 2주차 | [로지스틱회귀 (2)](https://github.com/tobigs-datamarket/tobigs-13rd/blob/master/2%EC%A3%BC%EC%B0%A8/week2_Logistic_assignment1_%EA%B9%80%ED%9A%A8%EC%9D%80.ipynb) |  13기 이지용  |
 
 
