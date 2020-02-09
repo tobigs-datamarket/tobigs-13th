@@ -1,4 +1,4 @@
-# Python을 이용한 전처리와 시각화
+# Python을 이용한 전처리와 시각화 \(Pandas,Matplotlib,Seaborn\)
 
 전처리와 EDA\_13기 조상연
 
@@ -541,9 +541,9 @@ In \[306\]:
 |  |
 | 마찬가지로 강남지역에서도 낙찰가 하위 100개가 보이는데 PPP를 보면 2000에서 3000만원 수준으로 단지 평수가 작을 뿐 높은 PPP를 보인다. 이를 통해 평당 가격이 지역별 특성을 반영하며 좀 더 지역별 명확한 분류를 할 수 있도록 해준다. |
 
-![](../.gitbook/assets/image%20%2818%29.png)
+![](../.gitbook/assets/image%20%2820%29.png)
 
-![](../.gitbook/assets/image%20%2815%29.png)
+![](../.gitbook/assets/image%20%2816%29.png)
 
 In \[ \]:
 
