@@ -110,7 +110,7 @@ beta
 array([0.90546443, 0.75530667, 0.65834986])
 ```
 
-![](../.gitbook/assets/image%20%2861%29.png)
+![](../.gitbook/assets/image%20%2879%29.png)
 
 ```python
 def sigmoid(x, beta) :
@@ -128,7 +128,7 @@ sigmoid(X_train[0], beta)
 
 ## 2. log likelihood
 
-![](../.gitbook/assets/image%20%2815%29.png)
+![](../.gitbook/assets/image%20%2822%29.png)
 
 ```python
 #개별 likelihood, 각각의 x입력값에 대한 p의 값 산정
