@@ -1,6 +1,6 @@
 # Python을 이용한 선형회귀분석 구현\(Sklearn,Numpy\) \(2\)
 
-## Assignment 2. <a id="Assignment-2."></a>
+## 요구사항 <a id="Assignment-2."></a>
 
 1. 1주차 과제 의 데이터를 가지고 선형회귀에 필요한 EDA 및 전처리 및 인코딩
    * 범주형 변수 인코딩 3개 이상, EDA 3개 이상 1주차 과제 적극적으로 활용 가능 및 자신이 만든 Feature 역시 사용 가능
