@@ -216,7 +216,7 @@ df = df.drop(df['Hammer_price'].idxmax(), axis=0)
 # 눈에 띄는 하나의 결측치를 제거한다.
 ```
 
-![](../.gitbook/assets/image%20%2836%29.png)
+![](../.gitbook/assets/image%20%2837%29.png)
 
 ```python
 plt.figure(figsize=(12, 10))
@@ -291,7 +291,7 @@ sns.scatterplot(x='regist_period', y='Hammer_price', data=df, ax=axes[1][0])
 sns.scatterplot(x='Auction_period', y='Hammer_price', data=df, ax=axes[1][1])
 ```
 
-![](../.gitbook/assets/image%20%2847%29.png)
+![](../.gitbook/assets/image%20%2848%29.png)
 
 #### 2. 나머지 object 타입의 변수 encoding¶ <a id="2.-&#xB098;&#xBA38;&#xC9C0;-object-&#xD0C0;&#xC785;&#xC758;-&#xBCC0;&#xC218;-encoding"></a>
 
@@ -305,7 +305,7 @@ df = pd.concat([df, bid_class], axis=1)
 sns.boxplot(x='Bid_class', y='Hammer_price', data=df)
 ```
 
-![](../.gitbook/assets/image%20%2871%29.png)
+![](../.gitbook/assets/image%20%2872%29.png)
 
 ```python
 print( df['Final_result'].unique() ) # 1개 -> 뒤에서 column 제거 
@@ -379,7 +379,7 @@ sns.boxplot(x='Specific', y='Hammer_price', data=df, ax=axes[1][2])
 # Specific 역시 결측치인 경우가 결측치가 아닌 경우에 비해 평균이 높다.
 ```
 
-![](../.gitbook/assets/image%20%2844%29.png)
+![](../.gitbook/assets/image%20%2845%29.png)
 
 ```python
 # 도로의 너비에 따른 순서형 범주형변수 생성 (3)
@@ -417,7 +417,7 @@ sns.countplot(df['Appraisal_company'].value_counts())
 plt.vlines(x=10.5, ymin=0, ymax=30, color='red', linestyles='--')
 ```
 
-![](../.gitbook/assets/image%20%2868%29.png)
+![](../.gitbook/assets/image%20%2869%29.png)
 
 ```python
 # 17건 미만이면 0으로
@@ -439,7 +439,7 @@ df['Appraisal_company_size'] = df['Appraisal_company'].replace(appraisal_company
 sns.boxplot(x='Appraisal_company_size', y='Hammer_price', data=df)
 ```
 
-![](../.gitbook/assets/image%20%2845%29.png)
+![](../.gitbook/assets/image%20%2846%29.png)
 
 ```python
 # encoding하기 힘들어 보이는 데이터는 제거
@@ -571,7 +571,7 @@ visualize_silhouette([2, 3, 4, 5, 6, 7, 8], train_dtm_matrix)
 visualize_silhouette([9, 10, 11, 12, 13, 14, 15], train_dtm_matrix)
 ```
 
-![](../.gitbook/assets/image%20%2837%29.png)
+![](../.gitbook/assets/image%20%2838%29.png)
 
 ```python
 visualize_silhouette([2, 3, 4, 5, 6, 7, 8], train_tfidf_matrix)
@@ -583,7 +583,7 @@ visualize_silhouette([2, 3, 4, 5, 6, 7, 8], train_tfidf_matrix)
 visualize_silhouette([9, 10, 11, 12, 13, 14, 15], train_tfidf_matrix)
 ```
 
-![](../.gitbook/assets/image%20%2855%29.png)
+![](../.gitbook/assets/image%20%2856%29.png)
 
 ```python
 
@@ -690,7 +690,7 @@ kmeans_df.iloc[index].sort_values(by='Label')
 sns.barplot(x=label, y=y_train)
 ```
 
-![](../.gitbook/assets/image%20%2863%29.png)
+![](../.gitbook/assets/image%20%2864%29.png)
 
 ```python
 test_dtm = cnt_vectorizer.transform(X_test['Creditor'])

@@ -11,4 +11,5 @@
 * [Python을 이용한 경사하강법, 로지스틱회귀 구현\(2\)](tutorial/python-2.md)
 * [Python을 이용한 클러스터링 \(1\)](tutorial/python-1-2.md)
 * [Python을 이용한 클러스터링 \(2\)](tutorial/python-2-1.md)
+* [Python을 이용한 클러스터링 \(3\)](tutorial/python-3.md)
 

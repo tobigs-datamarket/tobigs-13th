@@ -110,7 +110,7 @@ beta
 array([0.90546443, 0.75530667, 0.65834986])
 ```
 
-![](../.gitbook/assets/image%20%2860%29.png)
+![](../.gitbook/assets/image%20%2861%29.png)
 
 ```python
 def sigmoid(x, beta) :
