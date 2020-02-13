@@ -12,4 +12,5 @@
 * [Python을 이용한 클러스터링 \(1\)](tutorial/python-1-2.md)
 * [Python을 이용한 클러스터링 \(2\)](tutorial/python-2-1.md)
 * [Python을 이용한 클러스터링 \(3\)](tutorial/python-3.md)
+* [Python을 이용한 KNN](tutorial/python-knn.md)
 
