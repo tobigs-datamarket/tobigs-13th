@@ -216,7 +216,7 @@ df = df.drop(df['Hammer_price'].idxmax(), axis=0)
 # 눈에 띄는 하나의 결측치를 제거한다.
 ```
 
-![](../.gitbook/assets/image%20%2821%29.png)
+![](../.gitbook/assets/image%20%2836%29.png)
 
 ```python
 plt.figure(figsize=(12, 10))
@@ -239,7 +239,7 @@ sns.heatmap(df.corr(), cmap = 'RdYlBu_r', annot=True, fmt='.2f', linewidths=0.5)
 # 다중공선성 문제는 추정의 분산을 크게 만드는 경향이 있으므로 처리해야 한다.
 ```
 
-![](../.gitbook/assets/image%20%2810%29.png)
+![](../.gitbook/assets/image%20%2816%29.png)
 
 ## Encoding¶ <a id="Encoding"></a>
 
@@ -291,7 +291,7 @@ sns.scatterplot(x='regist_period', y='Hammer_price', data=df, ax=axes[1][0])
 sns.scatterplot(x='Auction_period', y='Hammer_price', data=df, ax=axes[1][1])
 ```
 
-![](../.gitbook/assets/image%20%2831%29.png)
+![](../.gitbook/assets/image%20%2847%29.png)
 
 #### 2. 나머지 object 타입의 변수 encoding¶ <a id="2.-&#xB098;&#xBA38;&#xC9C0;-object-&#xD0C0;&#xC785;&#xC758;-&#xBCC0;&#xC218;-encoding"></a>
 
@@ -305,7 +305,7 @@ df = pd.concat([df, bid_class], axis=1)
 sns.boxplot(x='Bid_class', y='Hammer_price', data=df)
 ```
 
-![](../.gitbook/assets/image%20%2849%29.png)
+![](../.gitbook/assets/image%20%2871%29.png)
 
 ```python
 print( df['Final_result'].unique() ) # 1개 -> 뒤에서 column 제거 
@@ -338,7 +338,7 @@ data의 row 수 = 1932
 unique한 addr_dong의 수 = 285
 ```
 
-![](../.gitbook/assets/image%20%2815%29.png)
+![](../.gitbook/assets/image%20%2823%29.png)
 
 ```python
 df['Auction_class'] = df['Auction_class'].apply(lambda x:1 if x=='임의' else 0)
@@ -379,7 +379,7 @@ sns.boxplot(x='Specific', y='Hammer_price', data=df, ax=axes[1][2])
 # Specific 역시 결측치인 경우가 결측치가 아닌 경우에 비해 평균이 높다.
 ```
 
-![](../.gitbook/assets/image%20%2828%29.png)
+![](../.gitbook/assets/image%20%2844%29.png)
 
 ```python
 # 도로의 너비에 따른 순서형 범주형변수 생성 (3)
@@ -409,7 +409,7 @@ df['road_name'] = df['road_name'].apply(lambda x:road_name_dummy(x))
 sns.boxplot(x='road_name', y='Hammer_price', data=df)
 ```
 
-![](../.gitbook/assets/image%20%2818%29.png)
+![](../.gitbook/assets/image%20%2831%29.png)
 
 ```python
 plt.figure(figsize=(10, 6))
@@ -417,7 +417,7 @@ sns.countplot(df['Appraisal_company'].value_counts())
 plt.vlines(x=10.5, ymin=0, ymax=30, color='red', linestyles='--')
 ```
 
-![](../.gitbook/assets/image%20%2847%29.png)
+![](../.gitbook/assets/image%20%2868%29.png)
 
 ```python
 # 17건 미만이면 0으로
@@ -439,7 +439,7 @@ df['Appraisal_company_size'] = df['Appraisal_company'].replace(appraisal_company
 sns.boxplot(x='Appraisal_company_size', y='Hammer_price', data=df)
 ```
 
-![](../.gitbook/assets/image%20%2829%29.png)
+![](../.gitbook/assets/image%20%2845%29.png)
 
 ```python
 # encoding하기 힘들어 보이는 데이터는 제거
@@ -565,25 +565,25 @@ train_tfidf_matrix = pd.DataFrame(train_tfidf.toarray())
 visualize_silhouette([2, 3, 4, 5, 6, 7, 8], train_dtm_matrix)
 ```
 
-![](../.gitbook/assets/image%20%2813%29.png)
+![](../.gitbook/assets/image%20%2821%29.png)
 
 ```python
 visualize_silhouette([9, 10, 11, 12, 13, 14, 15], train_dtm_matrix)
 ```
 
-![](../.gitbook/assets/image%20%2822%29.png)
+![](../.gitbook/assets/image%20%2837%29.png)
 
 ```python
 visualize_silhouette([2, 3, 4, 5, 6, 7, 8], train_tfidf_matrix)
 ```
 
-![](../.gitbook/assets/image%20%282%29.png)
+![](../.gitbook/assets/image%20%284%29.png)
 
 ```python
 visualize_silhouette([9, 10, 11, 12, 13, 14, 15], train_tfidf_matrix)
 ```
 
-![](../.gitbook/assets/image%20%2838%29.png)
+![](../.gitbook/assets/image%20%2855%29.png)
 
 ```python
 
@@ -615,7 +615,7 @@ X_train = pd.concat([X_train, creditor], axis=1)
 sns.countplot(kmeans_df['Label'])
 ```
 
-![](../.gitbook/assets/image%20%283%29.png)
+![](../.gitbook/assets/image%20%286%29.png)
 
 ```python
 # 군집이 잘 수행되었나 보기 위해 Creditor와 KMeans에 의해 부여된 Label을 동시에 확인해보고자 한다.
@@ -690,7 +690,7 @@ kmeans_df.iloc[index].sort_values(by='Label')
 sns.barplot(x=label, y=y_train)
 ```
 
-![](../.gitbook/assets/image%20%2844%29.png)
+![](../.gitbook/assets/image%20%2863%29.png)
 
 ```python
 test_dtm = cnt_vectorizer.transform(X_test['Creditor'])
