@@ -1,4 +1,4 @@
-# Python을 이용한 SVM
+# Python을 이용한 SVM \(1\)
 
 
 
