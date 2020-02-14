@@ -22,7 +22,7 @@
 | 3주차 | [KNN](https://github.com/tobigs-datamarket/tobigs-13rd/blob/master/3%EC%A3%BC%EC%B0%A8/week3_KNN_%EC%9D%B4%EC%84%B8%EC%9C%A4.ipynb) | 12기 이세 |
 | 3주 | [Clustering](https://github.com/tobigs-datamarket/tobigs-13rd/blob/master/3%EC%A3%BC%EC%B0%A8/week3_Clustering_%EA%B9%80%ED%9A%A8%EC%9D%80.ipynb) | 12기 김효은 |
 | 3주차 | [Clustering](https://github.com/tobigs-datamarket/tobigs-13rd/blob/master/3%EC%A3%BC%EC%B0%A8/week3_Clustering_%EC%9D%B4%EC%84%B8%EC%9C%A4.ipynb) | 12기 이세윤 |
-| 3주차 | [Clustering\(DigDeep\)](https://github.com/tobigs-datamarket/tobigs-13rd/blob/master/3%EC%A3%BC%EC%B0%A8/week3_Clustering_DigDeep_%EA%B9%80%ED%98%84%EC%84%A0.ipynb) | 13기 김현 |
+| 3주차 | [Clustering\(DigDeep\)](https://github.com/tobigs-datamarket/tobigs-13rd/blob/master/3%EC%A3%BC%EC%B0%A8/week3_Clustering_DigDeep_%EA%B9%80%ED%98%84%EC%84%A0.ipynb) | 13기 김현선 |
 | 3주 | [NaiveBayes](https://github.com/tobigs-datamarket/tobigs-13rd/blob/master/3%EC%A3%BC%EC%B0%A8/week3_NaiveBayes_%EC%8B%A0%EB%AF%BC%EC%A0%95.ipynb) | 13기 신민 |
 | 3주차 | [SVM\(1\)](https://github.com/tobigs-datamarket/tobigs-13rd/blob/master/3%EC%A3%BC%EC%B0%A8/week3_SVM1_%EC%9D%B4%EC%84%B8%EC%9C%A4.ipynb) | 12기 이세윤 |
 | 3주 | [SVM\(2\)](https://github.com/tobigs-datamarket/tobigs-13rd/blob/master/3%EC%A3%BC%EC%B0%A8/week3_SVM_assignment2_%EC%9D%B4%EC%A7%80%EC%9A%A9.ipynb) | 13기 이지용 |
