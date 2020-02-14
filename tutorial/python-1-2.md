@@ -1,4 +1,4 @@
-# Python을 이용한 클러스터링 \(1\)
+# Python을 이용한 클러스터링 \(DigDeep\)
 
 ## 1\) 6개의 Toy Data에 대해 다양한 Clustering 적용해보기 <a id="1)-6&#xAC1C;&#xC758;-Toy-Data&#xC5D0;-&#xB300;&#xD574;-&#xB2E4;&#xC591;&#xD55C;-Clustering-&#xC801;&#xC6A9;&#xD574;&#xBCF4;&#xAE30;"></a>
 
@@ -135,7 +135,7 @@ plt.show()
 
 ```
 
-![](../.gitbook/assets/image%20%2893%29.png)
+![](../.gitbook/assets/image%20%28107%29.png)
 
 ### KMeans Clustering
 
@@ -192,7 +192,7 @@ plt.tight_layout()
 plt.show()
 ```
 
-![](../.gitbook/assets/image%20%2866%29.png)
+![](../.gitbook/assets/image%20%2871%29.png)
 
 보면 집단이 원으로 뭉쳐있는 3번째\(위-&gt;아래, 왼쪽-&gt;오른쪽 순\) 그룹만 잘 분류가 되었고 나머지는 분류가 잘 안됨을 알 수 있다. KMeans clustering은 각 그룹이 빽빽히 뭉쳐있는 경우가 아니면 정확도가 낮음을 알 수 있다. 특히나 뭉쳐진 모양이 아닌 1,2,5번째와 같이 특정 모양을 띨 경우 더더욱이 분류가 안됨을 알 수 있다.
 
@@ -247,7 +247,7 @@ plt.tight_layout()
 plt.show()
 ```
 
-![](../.gitbook/assets/image%20%2827%29.png)
+![](../.gitbook/assets/image%20%2828%29.png)
 
 Agglomerative Clustering을 진행한 결과 kmeans와는 살짝 다른 결과가 도출되었다. 6번째 모형을 보면 원래 분류와 거의 동일하게 분류가 됨을 알 수 있었다. 또한 kmeans clustering은 나눠진 그룹의 크기가 거의 같도록 분류되었다면 agglomerative clustering은 이에 구애받지 않고 group이 나누어짐을 알 수 있었다.\(이는 1,2번의 파란색 group의 크기가 더 큼을 통해 추론 가능하다. kmeans는 색깔별 크기가 거의 동일\)
 
@@ -344,7 +344,7 @@ def plotall3(dataset):
 plotall2(datasets[0])
 ```
 
-![](../.gitbook/assets/image%20%2864%29.png)
+![](../.gitbook/assets/image%20%2869%29.png)
 
 noisy circles는 spectral clustering이 잘 되는 듯 보인다. DBSCAN과 meanshift method도 다른 것과는 달리 원형 모향을 잘 살려 clustering한 것을 알 수 있는데 안쪽과 바깥쪽을 구분 못하고 하나로 인식한 것이 아쉬운 점이다.
 
@@ -352,7 +352,7 @@ noisy circles는 spectral clustering이 잘 되는 듯 보인다. DBSCAN과 mean
 plotall2(datasets[1])
 ```
 
-![](../.gitbook/assets/image%20%2894%29.png)
+![](../.gitbook/assets/image%20%28108%29.png)
 
 noisy moons는 DBSCAN과 Spectral Clustering이 뛰어난 성능을 보인다.
 
@@ -360,7 +360,7 @@ noisy moons는 DBSCAN과 Spectral Clustering이 뛰어난 성능을 보인다.
 plotall3(datasets[2])
 ```
 
-![](../.gitbook/assets/image%20%2857%29.png)
+![](../.gitbook/assets/image%20%2862%29.png)
 
 blobs는 agglomerative clustering, kmeans, MeanShift, spectral clustering, birch가 정확하게 분류하였다. 제일 분류하기 쉬운 모형이긴 한 것 같다.
 
@@ -368,7 +368,7 @@ blobs는 agglomerative clustering, kmeans, MeanShift, spectral clustering, birch
 plotall2(datasets[3])
 ```
 
-![](../.gitbook/assets/image%20%2886%29.png)
+![](../.gitbook/assets/image%20%2899%29.png)
 
 no\_structure은 DBSCAN과 MeanShift가 제대로 clustering하였다. 하지만 agglomerative clustering과 kmeans, spectral clustering, birch는 number of clusters를 지정해 주었기 때문에 위와 같은 결과를 냈음으로 판단된다.
 
@@ -376,7 +376,7 @@ no\_structure은 DBSCAN과 MeanShift가 제대로 clustering하였다. 하지만
 plotall3(datasets[4])
 ```
 
-![](../.gitbook/assets/image%20%28102%29.png)
+![](../.gitbook/assets/image%20%28116%29.png)
 
 aniso는 spectral clustering이 제일 비슷하게 clustering을 진행한 것으로 보인다. agglomerative clustering은 조금 아쉬운 결과를 내었는데 그래도 이와 같은 모형에서는 나름 성능이 좋아 보인다.
 
@@ -384,7 +384,7 @@ aniso는 spectral clustering이 제일 비슷하게 clustering을 진행한 것�
 plotall3(datasets[5])
 ```
 
-![](../.gitbook/assets/image%20%2822%29.png)
+![](../.gitbook/assets/image%20%2823%29.png)
 
 varid는 Agglomerative clustering과 spectral clustring이 제일 좋은 성능을 내었고, kmeans가 조금 아쉬운 결과를 내었다.
 
@@ -446,7 +446,7 @@ plt.ylabel("클러스터 거리")
 #https://docs.scipy.org/doc/scipy/reference/generated/scipy.cluster.hierarchy.linkage.html
 ```
 
-![](../.gitbook/assets/image%20%2819%29.png)
+![](../.gitbook/assets/image%20%2820%29.png)
 
 * Max\(Complete Link\) Method
 
@@ -472,7 +472,7 @@ plt.xlabel("샘플 번호")
 plt.ylabel("클러스터 거리")
 ```
 
-![](../.gitbook/assets/image%20%2883%29.png)
+![](../.gitbook/assets/image%20%2896%29.png)
 
 
 
@@ -499,7 +499,7 @@ plt.xlabel("샘플 번호")
 plt.ylabel("클러스터 거리")
 ```
 
-![](../.gitbook/assets/image%20%2845%29.png)
+![](../.gitbook/assets/image%20%2849%29.png)
 
 * Centroid Method
 
@@ -524,7 +524,7 @@ plt.xlabel("샘플 번호")
 plt.ylabel("클러스터 거리")
 ```
 
-![](../.gitbook/assets/image%20%2882%29.png)
+![](../.gitbook/assets/image%20%2894%29.png)
 
 * Ward Method
 
@@ -547,16 +547,15 @@ plt.xlabel("샘플 번호")
 plt.ylabel("클러스터 거리")
 ```
 
-![](../.gitbook/assets/image%20%2860%29.png)
+![](../.gitbook/assets/image%20%2865%29.png)
 
-5가지 method의 2,3 clusters로 구분되는 대략적인 거리를 정리해보면 다음과 같다.  
+5가지 method의 2,3 clusters로 구분되는 대략적인 거리를 정리해보면 다음과 같다.
 
-
-* Min\(single link\)method : 3, 1.9 
-* Max\(complete link\)method: 6.5, 5.5 
-* Group average method: 4.5, 3.5 
-* Centroid method: 4, 3 
-* Ward method: 10, 7  구분 거리는 min &lt; centriod &lt; group average &lt; max &lt; ward 순으로 나타낼 수 있다. Single linkage는 두 그룹이 묶일 때 한 쌍의 point들만 가까우면 되므로 만들어진 cluster가 너무 분산되어 있을 가능성이 있다. 위 결과에서 보면 1이 \(0,4,8\)이 아닌 \(5,6,10,11,..\)에 묶여 있는 것으로 이를 확인할 수 있다. 반대로 complete linkage는 만들어지는 cluster가 너무 밀집되어 있을 가능성이 크다. 이 둘을 완화하는 방법이 group average method와 centroid method라 볼 수 있을 것 같다. 
+* Min\(single link\)method : 3, 1.9
+* Max\(complete link\)method: 6.5, 5.5
+* Group average method: 4.5, 3.5
+* Centroid method: 4, 3
+* Ward method: 10, 7  구분 거리는 min &lt; centriod &lt; group average &lt; max &lt; ward 순으로 나타낼 수 있다. Single linkage는 두 그룹이 묶일 때 한 쌍의 point들만 가까우면 되므로 만들어진 cluster가 너무 분산되어 있을 가능성이 있다. 위 결과에서 보면 1이 \(0,4,8\)이 아닌 \(5,6,10,11,..\)에 묶여 있는 것으로 이를 확인할 수 있다. 반대로 complete linkage는 만들어지는 cluster가 너무 밀집되어 있을 가능성이 크다. 이 둘을 완화하는 방법이 group average method와 centroid method라 볼 수 있을 것 같다.
 
 ## 3\) K-Means Clustering <a id="3)-K-Means-Clustering"></a>
 

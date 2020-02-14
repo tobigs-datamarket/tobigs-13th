@@ -184,7 +184,7 @@ sns.pairplot(df, hue="species")
 plt.show()
 ```
 
-![](../.gitbook/assets/image%20%2875%29.png)
+![](../.gitbook/assets/image%20%2884%29.png)
 
 * petal length 만으로 0과 1종을 완전히 구분할 수 있다
 * petal length와 petal width 두가지로 나누면 1과 2종도 구분해 낼 수 있을 것으로 보인다
@@ -198,7 +198,7 @@ plt.legend()
 plt.show()
 ```
 
-![](../.gitbook/assets/image%20%2831%29.png)
+![](../.gitbook/assets/image%20%2833%29.png)
 
 * 위의 분포를 보면 petal length 하나의 변수만으로 setosa와 다른 종들을 쉽게 분류해낼 수 있을 것으로 보인다.
 
@@ -209,7 +209,7 @@ plt.legend()
 plt.show()
 ```
 
-![](../.gitbook/assets/image%20%2823%29.png)
+![](../.gitbook/assets/image%20%2824%29.png)
 
 
 
@@ -238,7 +238,7 @@ plt.show()
 
 ```
 
-![](../.gitbook/assets/image%20%2843%29.png)
+![](../.gitbook/assets/image%20%2847%29.png)
 
 * 각 데이터의 분포를 살펴보았다.
 * sepal\_width 데이터에서 outlier가 있는 것을 알 수 있었다.
