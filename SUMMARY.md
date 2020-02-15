@@ -16,4 +16,8 @@
 * [Python을 이용한 Naive Bayes](tutorial/python-naive-bayes.md)
 * [Python을 이용한 SVM \(1\)](python-svm.md)
 * [Python을 이용한 SVM \(2\)](python-svm-2.md)
+* [Python을 이용한 Decision Tree \(1\)](tutorial/python-decision-tree-1.md)
+* [Python을 이용한 Decision Tree \(2\)](python-decision-tree-2.md)
+* [Python을 이용한 Decision Tree \(3\)](python-decision-tree-3.md)
+* [Python을 이용한 Decision Tree \(4\)](python-decision-tree-4.md)
 
