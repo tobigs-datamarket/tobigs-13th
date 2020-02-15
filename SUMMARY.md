@@ -14,6 +14,6 @@
 * [Python을 이용한 클러스터링 \(2\)](tutorial/python-2-2.md)
 * [Python을 이용한 KNN](tutorial/python-knn.md)
 * [Python을 이용한 Naive Bayes](tutorial/python-naive-bayes.md)
-* [Python을 이용한 SVM \(1\)](python-svm.md)
-* [Python을 이용한 SVM \(2\)](python-svm-2.md)
+* [Python을 이용한 SVM \(1\)](tutorial/python-svm.md)
+* [Python을 이용한 SVM \(2\)](tutorial/python-svm-2.md)
 
