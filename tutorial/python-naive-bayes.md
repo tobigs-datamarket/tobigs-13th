@@ -2,7 +2,7 @@
 
 ## Assignment <a id="Assignment"></a>
 
-* 중간 중간 assignment라고 되어있고 ''' ? ''' 이 있을거에요 그 부분을 채워주시면 됩니다 :네~~
+* 중간 중간 assignment라고 되어있고 ''' ? ''' 이 있을거에요 그 부분을 채워주시면 됩니다.
 
 ## Assignment 1 : Gaussian Naive Bayes Classification 해보기 <a id="Assignment-1-:-Gaussian-Naive-Bayes-Classification-&#xD574;&#xBCF4;&#xAE30;"></a>
 
