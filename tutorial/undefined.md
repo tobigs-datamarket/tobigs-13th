@@ -844,8 +844,6 @@ plt.plot(x, y)
 plt.show()
 ```
 
-![](../.gitbook/assets/image%20%2822%29.png)
-
 아주 잘 추정되었고 모델링도 아주 잘된 것으로 보인다. :3
 
 ### by calculation of matrix
