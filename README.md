@@ -26,8 +26,10 @@
 | 3week | [NaiveBayes](https://github.com/tobigs-datamarket/tobigs-13rd/blob/master/3%EC%A3%BC%EC%B0%A8/week3_NaiveBayes_%EC%8B%A0%EB%AF%BC%EC%A0%95.ipynb) | 13기 신민정 |
 | 3week | [SVM \(1\)](https://github.com/tobigs-datamarket/tobigs-13rd/blob/master/3%EC%A3%BC%EC%B0%A8/week3_SVM1_%EC%9D%B4%EC%84%B8%EC%9C%A4.ipynb) | 12기 이세윤 |
 | 3week | [SVM \(2\)](https://github.com/tobigs-datamarket/tobigs-13rd/blob/master/3%EC%A3%BC%EC%B0%A8/week3_SVM_assignment2_%EC%9D%B4%EC%A7%80%EC%9A%A9.ipynb) | 13기 이지용 |
-| 4week | Decision Tree \(1\), \(2\) | 13기 조상yeon |
+| 4week | Decision Tree \(1\), \(2\) | 13기 조상 |
 | 4week | Decision Tree \(3\), \(4\) | 13기 최혜빈 |
+| 4week | Object Orient Programming \(1\) | 13기 조상연 |
+| 4week | Object Orient Programming \(2\) | 13기 최혜빈 |
 
 [공식 홈페이지](http://www.datamarket.kr/xe/page_QEhq64)
 
