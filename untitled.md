@@ -1,3 +1,7 @@
+---
+description: 13기 조혜원
+---
+
 # Python을 이용한 Ensemble \(1\)
 
 ### 요구사항 
