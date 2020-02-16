@@ -22,4 +22,5 @@
 * [Python을 이용한 Decision Tree \(4\)](python-decision-tree-4.md)
 * [Python을 이용한 객체 지향 프로그래밍 \(1\)](python-1.md)
 * [Python을 이용한 객체 지향 프로그래밍 \(2\)](python-2.md)
+* [Python을 이용한 Ensemble \(1\)](untitled.md)
 
