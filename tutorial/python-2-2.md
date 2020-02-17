@@ -4,6 +4,12 @@
 
 #### - Clustering 해보기 <a id="--Clustering-&#xD574;&#xBCF4;&#xAE30;"></a>
 
+{% hint style="info" %}
+**우수과제 선정이유** 
+
+각 클러스터링 방법에 대해 포인트를 잘 잡고 과제를 진행해주시며 마지막에 결론에 해당하는 시각화까지 완벽하게 해주셔서 우수과제로 선정되었습니다.
+{% endhint %}
+
 ## Load Dataset
 
 **Import packages**

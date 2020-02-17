@@ -1,6 +1,17 @@
-# Python을 이용한 SVM \(1\)
+# Python을 이용한 SVM \(2\)
 
+## 요구사항  
 
+1. 이 과제는 제가 anomaly detection 데이터셋\(캐글에 올라와있음\)을 드립니다. 이것은 해당 결제가 사기인지 아닌지 판별하는 데이터셋이며, 실습코드를 활용하고, 또 본인이 여태 배운 내용을 활용하여 자유롭게 데이터를 가지고 연습해주시면 됩니다. 
+2. 다만 이 데이터셋은 굉장히 imbalance한 데이터 셋입니다. 실제 사기를 치는 사례가 많지 않으므로 사기인 경우가 전체에 0.17 프로밖에 되지 않습니다. 따라서, 그냥 데이터를 트레이닝 시키면 무조건 사기가 아니라고 판별해 버릴 가능성이 높습니다. 또한, 그대로 트레이닝을 돌리게 되면 엄청나게 많은 데이터 양 때문에 트레이닝조차 힘들 것입니다. 그런데 실제로 정확도를 높이면서 트레이닝을 할 수 있는 방법이 있으니 고민해보세요.
+
+{% hint style="info" %}
+**우수과제 선정이유**
+
+confusion matrix를 쓴 이유 등을 구체적으로 적어줬고, weight를 줘보는 방법\(원래 의도했던 방법\)을 시도해보고 하이퍼 파라미터 튜닝도 exponential하게 함으로써 좋은 parameter를 잘 찾는 등 전반적으로 깔끔하고 군더더기없이 과제를 진행해 우수과제로 선정되었습니다. 
+{% endhint %}
+
+{% embed url="https://www.kaggle.com/jacklizhi/creditcard" %}
 
 ```python
 import numpy as np
@@ -218,7 +229,9 @@ Precision Score:
 
 ## RandomUnderSampler <a id="RandomUnderSampler"></a>
 
-RandomUnderSampler를 통해 0, 1 사이의 대칭을 맞춰준다.In \[16\]:
+RandomUnderSampler를 통해 0, 1 사이의 대칭을 맞춰준다.
+
+In \[16\]:
 
 ```python
 # Train, Test 셋 나누기

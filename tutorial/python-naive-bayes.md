@@ -4,6 +4,12 @@
 
 * 중간 중간 assignment라고 되어있고 ''' ? ''' 이 있을거에요 그 부분을 채워주시면 됩니다.
 
+{% hint style="info" %}
+**우수과제 선정이유**
+
+나이브베이즈 관련 함수들의 인자와 반환값 형태 및 성질들을 꼼꼼히 살펴보았으며 군더더기없이 과제를 수행하였습니다**.**
+{% endhint %}
+
 ## Assignment 1 : Gaussian Naive Bayes Classification 해보기 <a id="Assignment-1-:-Gaussian-Naive-Bayes-Classification-&#xD574;&#xBCF4;&#xAE30;"></a>
 
 * sklearn에 Gaussian Naive Bayes Classification 클래스 함수가 이미 있습니다

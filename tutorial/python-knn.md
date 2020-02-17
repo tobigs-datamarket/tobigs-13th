@@ -4,6 +4,12 @@
 
 KNN으로 HyperParameter 이해하기
 
+{% hint style="info" %}
+**우수과제 선정이유**
+
+EDA를 통해 IRIS 데이터에 대한 분석과 기본 데이터와 스케일링한 데이터를 비교하며 하이퍼파리머터 튜닝까지 깔끔하게 해 우수과제로 선정되었습니다.
+{% endhint %}
+
 ## Load Dataset <a id="Load-Dataset"></a>
 
 ### **Import packages**
