@@ -1,4 +1,4 @@
-# Python을 이용한 전처리와 시각화 \(Pandas,Matplotlib,Seaborn\)
+# 전처리와 시각화 \(Pandas,Matplotlib,Seaborn\)
 
 전처리와 EDA\_13기 조상연
 

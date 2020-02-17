@@ -1,4 +1,4 @@
-# Python을 이용한 클러스터링 \(2\)
+# 클러스터링 실습 \(2\)\(EDA,Sklearn\)
 
 ## Assignment 3
 

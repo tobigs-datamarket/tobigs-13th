@@ -1,4 +1,4 @@
-# Python을 이용한 Naive Bayes
+# Navie Bayes 이해와 실습 \(Sklearn,Numpy\)
 
 ## Assignment <a id="Assignment"></a>
 

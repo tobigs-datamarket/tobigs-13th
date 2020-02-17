@@ -1,4 +1,4 @@
-# Python을 이용한 클러스터링 \(1\)
+# 클러스터링 실습 \(1\) \(EDA,Sklearn\)
 
 ## Assignment3. \#3 Clustering 해보기 : Mall\_Customer.csv <a id="Assignment3.-#3-Clustering-&#xD574;&#xBCF4;&#xAE30;-:-Mall_Customer.csv"></a>
 

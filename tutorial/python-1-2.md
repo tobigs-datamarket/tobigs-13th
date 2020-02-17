@@ -1,4 +1,4 @@
-# Python을 이용한 클러스터링 \(DigDeep\)
+# 클러스터링 연구 \(DigDeep\)
 
 ## 1\) 6개의 Toy Data에 대해 다양한 Clustering 적용해보기 <a id="1)-6&#xAC1C;&#xC758;-Toy-Data&#xC5D0;-&#xB300;&#xD574;-&#xB2E4;&#xC591;&#xD55C;-Clustering-&#xC801;&#xC6A9;&#xD574;&#xBCF4;&#xAE30;"></a>
 

@@ -2,7 +2,7 @@
 description: Numpy를 이용한 구현
 ---
 
-# Python을 이용한 경사하강법, 로지스틱회귀 구현\(2\)
+# Gradient Decent를 이용한 로지스틱 회귀 구현 \(2\)
 
 ## 데이터 불러오기
 

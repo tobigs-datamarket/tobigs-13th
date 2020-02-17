@@ -1,4 +1,4 @@
-# Python을 이용한 KNN
+# KNN을 통한 Parameter Tuning
 
 ## Assignment 1 <a id="Assignment-1"></a>
 

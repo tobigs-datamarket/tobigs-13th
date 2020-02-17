@@ -1,4 +1,4 @@
-# Python을 이용한 선형회귀분석 구현\(Sklearn,Numpy\) \(1\)
+# 선형 회귀분석 구현\(Sklearn,Numpy\) \(1\)
 
 ## 요구사항  
 
