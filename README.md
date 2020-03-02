@@ -33,10 +33,10 @@
 | 4week | [Ensemble \(1\)](https://github.com/tobigs-datamarket/tobigs-13rd/blob/master/4%EC%A3%BC%EC%B0%A8/week4_Ensemble_1_%EC%A1%B0%ED%98%9C%EC%9B%90.ipynb) | 13기 조혜원 |
 | 4week | [Ensemble \(2\)](https://github.com/tobigs-datamarket/tobigs-13rd/blob/master/4%EC%A3%BC%EC%B0%A8/week4_Ensemble_2_%EA%B0%95%EB%AF%B8%EA%B2%BD.ipynb) | 13기 강미경 |
 | 4week | [Ensemble \(3\)](https://github.com/tobigs-datamarket/tobigs-13rd/blob/master/4%EC%A3%BC%EC%B0%A8/week4_Ensemble_2_%EC%8B%A0%EB%AF%BC%EC%A0%95.ipynb) | 13기 신민정 |
-| 5week | [Dimensionality reduction \(1\)](null) | 13기 최혜빈 |
-| 5week | [Dimensionality reduction \(2\)](null) | 12기 김효은 |
-| 5week | [Practice of Machine Learning \(1\)](null) | 13기 강미경 |
-| 5week | [Practice of Machine Learning \(2\)](null) | 13기 이재빈 |
+| 5week | [Dimensionality reduction \(1\)](https://github.com/tobigs-datamarket/tobigs-13rd/blob/master/5주차/5week_PCA_13기최혜빈.ipynb) | 13기 최혜빈 |
+| 5week | [Dimensionality reduction \(2\)](https://github.com/tobigs-datamarket/tobigs-13rd/blob/master/5주차/5week_PCA_12기김효은.ipynb) | 12기 김효은 |
+| 5week | [Practice of Machine Learning \(1\)](https://github.com/tobigs-datamarket/tobigs-13rd/blob/master/5주차/5week_practicalML_13기_강미경.ipynb) | 13기 강미경 |
+| 5week | [Practice of Machine Learning \(2\)](https://github.com/tobigs-datamarket/tobigs-13rd/blob/master/5주차/5week_practicalML_13기_이재빈.ipynb) | 13기 이재빈 |
 
 
 
