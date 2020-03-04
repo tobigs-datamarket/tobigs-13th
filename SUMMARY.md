@@ -25,4 +25,6 @@
 * [Python을 이용한 Ensemble \(1\)](tutorial/untitled-2.md)
 * [Python을 이용한 차원 축소 실습 \(1\)](tutorial/python-1-3.md)
 * [Python을 이용한 차원 축소 실습 \(2\)](tutorial/python-2-4.md)
+* [Python을 이용한 실전 머신러닝 \(1\)](tutorial/python-1-4.md)
+* [Python을 이용한 실전 머신러닝 \(2\)](tutorial/python-2-5.md)
 
