@@ -149,7 +149,7 @@ plt.figure(figsize=(12, 5))
 sns.scatterplot(x='Age', y='Annual Income (k$)', data=mall_df, hue='Gender')
 ```
 
-![](../.gitbook/assets/image%20%2892%29.png)
+![](../.gitbook/assets/image%20%2894%29.png)
 
 ```python
 # Age의 변화에 따라 Annual Income의 변화를 scatter plot이 아닌 lineplot으로도 확인해보았다.
@@ -157,7 +157,7 @@ plt.figure(figsize=(12, 5))
 sns.lineplot(x='Age', y='Annual Income (k$)', data=mall_df)
 ```
 
-![](../.gitbook/assets/image%20%2850%29.png)
+![](../.gitbook/assets/image%20%2851%29.png)
 
 ```python
 # x축은 나이, y축은 소비수준으로 scatter plot을 그려보았다.
@@ -171,7 +171,7 @@ plt.axvline(40, 0, 100)
 plt.axhline(60, 0, 80)
 ```
 
-![](../.gitbook/assets/image%20%28103%29.png)
+![](../.gitbook/assets/image%20%28105%29.png)
 
 ```python
 # 여기서 5개의 군집이 보이는 것 같다.
@@ -185,7 +185,7 @@ plt.figure(figsize=(12, 5))
 sns.scatterplot(x='Annual Income (k$)', y='Spending Score (1-100)', data=mall_df, hue='Age')
 ```
 
-![](../.gitbook/assets/image%20%28119%29.png)
+![](../.gitbook/assets/image%20%28121%29.png)
 
 ```python
 # 실제 데이터는 3차원이지만 우리가 시각화한 내용은 2차원이다.
@@ -248,7 +248,7 @@ for i in range(len(linkage_list)):
 plt.show()
 ```
 
-![](../.gitbook/assets/image%20%28106%29.png)
+![](../.gitbook/assets/image%20%28108%29.png)
 
 
 
@@ -274,7 +274,7 @@ plt.subplot(133)
 sns.scatterplot(x='Age', y='Annual Income (k$)', data=mall_df, hue=labels, palette='Set2')
 ```
 
-![](../.gitbook/assets/image%20%28117%29.png)
+![](../.gitbook/assets/image%20%28119%29.png)
 
 ```python
 # https://frhyme.github.io/python-lib/matplotlib_3dplotting/
@@ -311,7 +311,7 @@ plt.subplot(133)
 sns.scatterplot(x='Age', y='Annual Income (k$)', data=mall_scaled_df, hue=labels, palette='Set2')
 ```
 
-![](../.gitbook/assets/image%20%2855%29.png)
+![](../.gitbook/assets/image%20%2856%29.png)
 
 ```python
 # 위의 clustering 결과를 3차원 시각화
@@ -324,7 +324,7 @@ z = mall_scaled_df['Age']
 ax.scatter(x, y, z, c = labels, s= 20, alpha=0.5, cmap='rainbow')
 ```
 
-![](../.gitbook/assets/image%20%2864%29.png)
+![](../.gitbook/assets/image%20%2865%29.png)
 
 ### 2\) KMeans
 
@@ -409,7 +409,7 @@ sns.scatterplot(x='Age', y='Annual Income (k$)', data=mall_df, hue=kmeans.labels
 plt.scatter(kmeans.cluster_centers_[:, 1], kmeans.cluster_centers_[:, 2], c='red', alpha=0.5, s=150)
 ```
 
-![](../.gitbook/assets/image%20%28125%29.png)
+![](../.gitbook/assets/image%20%28127%29.png)
 
 ```python
 # https://frhyme.github.io/python-lib/matplotlib_3dplotting/
@@ -490,7 +490,7 @@ plt.axhline(18, 0, 200, ls='--')
 print(np.sort(distances[:, 4])[188])
 ```
 
-![](../.gitbook/assets/image%20%2898%29.png)
+![](../.gitbook/assets/image%20%28100%29.png)
 
 ```python
 dbscan = DBSCAN(eps=18, min_samples=4) # scaling 하지 않은 데이터로 DBSCAN 학습
@@ -512,7 +512,7 @@ sns.scatterplot(x='Age', y='Annual Income (k$)', data=mall_df, hue=dbscan.labels
 # 이 데이터에는 DBSCAN이 적합하지 않은 것으로 예상된다.
 ```
 
-![](../.gitbook/assets/image%20%2883%29.png)
+![](../.gitbook/assets/image%20%2885%29.png)
 
 ```python
 fig = plt.figure(figsize=(10, 10))
@@ -561,7 +561,7 @@ sns.scatterplot(x='Age', y='Annual Income (k$)', data=mall_scaled_df, hue=dbscan
 # 아무대로 군집 별 밀도가 일정하지 않아 결과가 좋지 않은 것으로 예상된다.
 ```
 
-![](../.gitbook/assets/image%20%2852%29.png)
+![](../.gitbook/assets/image%20%2853%29.png)
 
 ```python
 fig = plt.figure(figsize=(10, 10))
@@ -755,7 +755,7 @@ visualize_silhouette(['hierarchical', 'ward'], mall_scaled_df, [2, 3, 4, 5, 6, 7
 
 ![](../.gitbook/assets/image%20%2846%29.png)
 
-![](../.gitbook/assets/image%20%28111%29.png)
+![](../.gitbook/assets/image%20%28113%29.png)
 
 ```python
 params = {'n_clusters':[2, 3, 4, 5, 6, 7]}
@@ -796,7 +796,7 @@ visualize_silhouette(['kmeans'], mall_df, [3, 4, 5, 6, 7, 8])
 visualize_silhouette(['kmeans'], mall_scaled_df, [3, 4, 5, 6, 7, 8])
 ```
 
-![](../.gitbook/assets/image%20%28124%29.png)
+![](../.gitbook/assets/image%20%28126%29.png)
 
 ![](../.gitbook/assets/image%20%2843%29.png)
 

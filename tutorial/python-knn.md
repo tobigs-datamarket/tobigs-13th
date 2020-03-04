@@ -190,7 +190,7 @@ sns.pairplot(df, hue="species")
 plt.show()
 ```
 
-![](../.gitbook/assets/image%20%2884%29.png)
+![](../.gitbook/assets/image%20%2886%29.png)
 
 * petal length 만으로 0과 1종을 완전히 구분할 수 있다
 * petal length와 petal width 두가지로 나누면 1과 2종도 구분해 낼 수 있을 것으로 보인다
@@ -244,7 +244,7 @@ plt.show()
 
 ```
 
-![](../.gitbook/assets/image%20%2847%29.png)
+![](../.gitbook/assets/image%20%2848%29.png)
 
 * 각 데이터의 분포를 살펴보았다.
 * sepal\_width 데이터에서 outlier가 있는 것을 알 수 있었다.

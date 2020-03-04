@@ -49,7 +49,7 @@ sns.pairplot(data=df, vars=['Total_land_auction_area','Total_building_area',
 plt.show()
 ```
 
-![](../.gitbook/assets/image%20%2873%29.png)
+![](../.gitbook/assets/image%20%2874%29.png)
 
 ```python
 #outlier처럼 보이는 점 찾기
@@ -117,7 +117,7 @@ sns.pairplot(data=df, vars=['Total_land_auction_area','Total_building_area',
 plt.show()
 ```
 
-![](../.gitbook/assets/image%20%2874%29.png)
+![](../.gitbook/assets/image%20%2875%29.png)
 
 이제 조금 그래프다운 형태를 띠나 여전히 outlier 의심점이 보인다. 이를 또 찾아보도록 하자.
 
@@ -313,7 +313,7 @@ df2_s.plot.hist(subplots=True, legend=True, layout=(3, 3))
 #https://harangdev.github.io/applied-data-science-with-python/applied-data-plotting-in-python/3/
 ```
 
-![](../.gitbook/assets/image%20%2885%29.png)
+![](../.gitbook/assets/image%20%2887%29.png)
 
 위와같이 scaling은 히스토그램에 영향이 없다. 변수 변환을 통해 히스토그램을 좀 더 이쁘게 변환해보겠다.
 
@@ -388,7 +388,7 @@ df2_s.plot.hist(subplots=True, legend=True, layout=(3, 3), range=(-8,4), bins=20
 #https://matplotlib.org/api/_as_gen/matplotlib.pyplot.hist.html
 ```
 
-![](../.gitbook/assets/image%20%2877%29.png)
+![](../.gitbook/assets/image%20%2879%29.png)
 
 xlabel의 범위가 일치하지 않아 price 그래프는 이쁘게 나왔으나 area 그래프는 한곳에 몰려있어 보임을 알 수 있다. 이는 다음에 나타낼 subplot 개별 지정을 통해 해결할 수 있다.
 
@@ -434,7 +434,7 @@ plt.tight_layout()
 plt.show()
 ```
 
-![](../.gitbook/assets/image%20%2866%29.png)
+![](../.gitbook/assets/image%20%2867%29.png)
 
 이제 그래프들이 대략적인 정규분포 모양을 따름을 알 수 있다. 다만 Total building auction area가 특정 값에 몰려있게 됨을 알 수 있는데 이는 건물이 지어지는 지역에서의 면적의 한계점이 존재한다고 파악할 수 있을 것 같다. Total building auction area와 Total building area는 거의 일치하나 경매에 사용된 빌딩의 면적이 좀 더 특정 값에 몰리는 것을 보아 경매에 선호되는 면적이 있거나, 범위를 내리거나 올려서 특정 값을 맞춘 것이 아닐까싶다.
 
@@ -713,7 +713,7 @@ model.score(x_train, y_train)
 sns.pairplot(x)
 ```
 
-![](../.gitbook/assets/image%20%2861%29.png)
+![](../.gitbook/assets/image%20%2862%29.png)
 
 r square가 높게 나온 이유는 서로 관련 있는 변수들이 많아서 생긴다고 볼 수도 있다. 이 데이터에서는 price관련된 변수가 3개, area 관련 변수가 4개가 있으며 서로 관련성이 큰데, 위의 pairplot에서 거의 직선으로 보이는 변수들로 얼마나 상관이 있는지 판단 가능하다. 더 정확한 판단을 위하여 VIF 검정을 진행해본다.
 
