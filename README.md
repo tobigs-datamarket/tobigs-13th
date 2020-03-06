@@ -37,6 +37,10 @@
 | 5week | [Dimensionality reduction \(2\)](https://github.com/tobigs-datamarket/tobigs-13rd/blob/master/5주차/5week_PCA_12기김효은.ipynb) | 12기 김효은 |
 | 5week | [Practice of Machine Learning \(1\)](https://github.com/tobigs-datamarket/tobigs-13rd/blob/master/5주차/5week_practicalML_13기_강미경.ipynb) | 13기 강미경 |
 | 5week | [Practice of Machine Learning \(2\)](https://github.com/tobigs-datamarket/tobigs-13rd/blob/master/5주차/5week_practicalML_13기_이재빈.ipynb) | 13기 이재빈 |
+| 6week | [Crawling](https://github.com/tobigs-datamarket/tobigs-13rd/blob/master/6%EC%A3%BC%EC%B0%A8/week6_Crawling_%EC%9D%B4%EC%A7%80%EC%9A%A9.ipynb) | 13기 이지용 |
+| 6week | [Neural-Net Basic \(1\)](https://github.com/tobigs-datamarket/tobigs-13rd/blob/master/6%EC%A3%BC%EC%B0%A8/week6_NN_%EC%9D%B4%EC%9E%AC%EB%B9%88.ipynb) | 13기 이재빈 |
+| 6week | [Neural-Net Basic \(2\)](https://github.com/tobigs-datamarket/tobigs-13rd/blob/master/6%EC%A3%BC%EC%B0%A8/week6_NN_%EC%B5%9C%ED%98%9C%EB%B9%88.ipynb
+) | 13기 최혜빈 |
 
 [공식 홈페이지](http://www.datamarket.kr/xe/page_QEhq64)
 
