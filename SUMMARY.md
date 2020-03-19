@@ -28,4 +28,6 @@
 * [Python을 이용한 실전 머신러닝 \(1\)](tutorial/python-1-4.md)
 * [Python을 이용한 실전 머신러닝 \(2\)](tutorial/python-2-5.md)
 * [Crawling](tutorial/crawling.md)
+* [Neural Net Basic \(1\)](tutorial/neural-net-basic-1.md)
+* [Neural Net Basic \(2\)](tutorial/neural-net-basic-2.md)
 
