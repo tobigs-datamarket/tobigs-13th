@@ -30,4 +30,7 @@
 * [Crawling](tutorial/crawling.md)
 * [Neural Net Basic \(1\)](tutorial/neural-net-basic-1.md)
 * [Neural Net Basic \(2\)](tutorial/neural-net-basic-2.md)
+* [Advanced Neural Net \(1\)](tutorial/advanced-neural-net-1.md)
+* [Advanced Neural Net \(2\)](tutorial/advanced-neural-net-2.md)
+* [Advanced Neural Net \(3\)](tutorial/advanced-neural-net-3.md)
 
