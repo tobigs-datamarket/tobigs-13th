@@ -1,4 +1,4 @@
-# GAN\(Generative Adversarial Nets\) 논문 리뷰
+# \(GAN\)Generative Adversarial Nets 논문 리뷰
 
 
 
