@@ -1,7 +1,11 @@
-# GAN 논문 리뷰
+# GAN\(Generative Adversarial Nets\) 논문 리뷰
+
+{% file src="../.gitbook/assets/generative-adversarial-nets.pdf" caption="Generative Adversarial Nets" %}
+
+[https://papers.nips.cc/paper/5423-generative-adversarial-nets.pdf](https://papers.nips.cc/paper/5423-generative-adversarial-nets.pdf)
 
 {% hint style="info" %}
-우수과제 선정 이유
+**우수과제 선정이유**
 
  우수과제를 선정할 때에는 팀원의 입장에서 직관적으로 이해할 수 있는지를 기준으로 삼았습니다. 이 과제에서는 Loss Function에 대한 친절한 설명과 알고리즘 증명 과정을 인상깊게 보았습니다.
 {% endhint %}
