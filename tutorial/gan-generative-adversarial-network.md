@@ -1,5 +1,7 @@
 # GAN\(Generative Adversarial Nets\) 논문 리뷰
 
+
+
 {% file src="../.gitbook/assets/generative-adversarial-nets.pdf" caption="Generative Adversarial Nets" %}
 
 [https://papers.nips.cc/paper/5423-generative-adversarial-nets.pdf](https://papers.nips.cc/paper/5423-generative-adversarial-nets.pdf)

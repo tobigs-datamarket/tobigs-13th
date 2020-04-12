@@ -36,4 +36,5 @@
 * [Reinforcement Learning\(1\)](tutorial/reinforcement-learning-1.md)
 * [Reinforcement Learning\(2\)](tutorial/reinforcement-learning-2.md)
 * [GAN\(Generative Adversarial Nets\) 논문 리뷰](tutorial/gan-generative-adversarial-network.md)
+* [\(ResNet\)Deep Residual Learning for Image Recognition 논문 리뷰](tutorial/resnet-deep-residual-learning-for-image-recognition.md)
 
