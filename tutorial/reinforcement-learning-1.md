@@ -36,22 +36,22 @@ Deep Learning을 그대로 RL에 적용시키기에는 몇 가지 문제가 발�
 
 ![rl1](https://user-images.githubusercontent.com/43749571/77389601-f9d2eb80-6dd6-11ea-837d-9f2b8ed4a9c4.png)
 
-{% \varepsilon %} \(environment\) = Atari emulator  
+$$ \varepsilon $$ \(environment\) = Atari emulator  
  구성 요소: actions, observations\(화면\), rewards\(점수\)
 
-1. $a\_t$를 선택합니다
+1. $$a\_t$$를 선택합니다
 2. 선택한 action은 emulator에게 전달됩니다
 3. state & score를 수정합니다
-4. $r\_t$ \(game score\)를 찾습니다
+4. $$ r\_t$$ \(game score\)를 찾습니다
 
-* 이 때, 현재 상황을 주어진 $x\_t$\(time t에서의 pixel 값\)로만 판단하기에는 무리가 있습니다.  따라서 action, observation을 보고 난 후에 game 전략을 학습합니다.
+* 이 때, 현재 상황을 주어진 $$ x\_t $$\(time t에서의 pixel 값\)로만 판단하기에는 무리가 있습니다.  따라서 action, observation을 보고 난 후에 game 전략을 학습합니다.
 * 또한 게임은 언젠가 끝날 것이기 때문에, emulator의 학습 과정은 종결될 것이라고\(finite\) 가정하고,  finite **MDP\(Markov Decision Process\)** 로 model을 가정합니다.
 
 우리의 목표는 agent가 emulator와 상호작용하여, **future reward**를 최대화하는 적절한 action을 선택하는 것입니다.  
  이를 위해, 다음과 같이 정의합니다.
 
-* Reward Function  ${R\_t = \sum\_{t'=t}^{T} \gamma^\(t'-t\)r\_t}$ \($T$ = 종식 시간\)
-* Q-function \($Q^\*$, Optimal action-value function\)  $Q^\*\(s,a\) = \max\_{\pi}\mathbb{E}\[R\_t\|s\_t=s, a\_t=a, \pi\]$ \($\pi$ = policy\)
+* Reward Function  $${R_t = \sum_{t'=t}^{T} \gamma^(t'-t)r_t}  $$\($$ T $$ = 종식 시간\)
+* Q-function \($$Q^\*$$, Optimal action-value function\)  $Q^\*\(s,a\) = \max\_{\pi}\mathbb{E}\[R\_t\|s\_t=s, a\_t=a, \pi\]$ \($\pi$ = policy\)
 
 \(1\)  
  **Q-function**은 **Bellman equation**을 따르게 됩니다.
