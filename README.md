@@ -43,7 +43,7 @@
 | 7week | [Advanced Neural Net \(1\)](https://github.com/tobigs-datamarket/tobigs-13rd/blob/master/7%EC%A3%BC%EC%B0%A8/week7_NeuralNet_pytorch_%ED%97%88%EC%A0%95%EB%AF%BC.ipynb) | 13기 허정민 |
 | 7week | [Advanced Neural Net \(2\)](https://github.com/tobigs-datamarket/tobigs-13rd/blob/master/7%EC%A3%BC%EC%B0%A8/w7_DL_Framework_csy.ipynb) | 13기 조상연. |
 | 7week | [Advanced Neural Net \(3\)](https://github.com/tobigs-datamarket/tobigs-13rd/blob/master/7%EC%A3%BC%EC%B0%A8/week7_NeuralNet_pytorch_%EC%9D%B4%EC%98%88%EC%A7%80.ipynb) | 13기 이예지. |
-| 8week |  | 13기 조상연. |
+| 8week | [Natural Language Processing Basic](https://github.com/tobigs-datamarket/tobigs-13rd/blob/master/8%EC%A3%BC%EC%B0%A8/w8_nlp_%EC%A1%B0%EC%83%81%EC%97%B0.ipynb) | 13기 조상연. |
 | 8week | [CNN AlexNet](https://github.com/tobigs-datamarket/tobigs-13rd/blob/master/8%EC%A3%BC%EC%B0%A8/week8_CNN2_%EC%9D%B4%EC%84%B8%EC%9C%A4.ipynb) | 12기 이세윤. |
 | 8week | [Reinforcement Learning\(1\)](https://github.com/tobigs-datamarket/tobigs-13rd/blob/master/8%EC%A3%BC%EC%B0%A8/week8_RL_%EC%9D%B4%EC%9E%AC%EB%B9%88.ipynb) | 13기 이재빈. |
 | 8week | [Reinforcement Learning\(2\)](https://github.com/tobigs-datamarket/tobigs-13rd/blob/master/8%EC%A3%BC%EC%B0%A8/week8_RL_%ED%97%88%EC%A0%95%EB%AF%BC.pdf) | 13기 허정민. |
