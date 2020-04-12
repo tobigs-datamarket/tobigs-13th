@@ -34,4 +34,5 @@
 * [Advanced Neural Net \(2\)](tutorial/advanced-neural-net-2.md)
 * [Advanced Neural Net \(3\)](tutorial/advanced-neural-net-3.md)
 * [Reinforcement Learning\(1\)](tutorial/reinforcement-learning-1.md)
+* [Reinforcement Learning\(2\)](tutorial/reinforcement-learning-2.md)
 

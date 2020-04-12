@@ -533,7 +533,7 @@ eigvals = pca.explained_variance_ratio_
 plt.plot(sing_vals, eigvals, 'ro-', linewidth=1)
 ```
 
-![](../.gitbook/assets/image%20%2878%29.png)
+![](../.gitbook/assets/image%20%2880%29.png)
 
 ```python
 plt.plot(sing_vals, eigvals, 'ro-', linewidth=1)
@@ -541,7 +541,7 @@ plt.xlim(0,40)
 #줄이고 줄인 결과적으로  30-40 정도가 적당하다고 판단했습니다
 ```
 
-![](../.gitbook/assets/image%20%2847%29.png)
+![](../.gitbook/assets/image%20%2849%29.png)
 
 ```text
 #마지막으로 누적설명률을 판단했습니다
