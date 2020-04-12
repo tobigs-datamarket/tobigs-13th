@@ -43,6 +43,8 @@
 | 7week | [Advanced Neural Net \(1\)](https://github.com/tobigs-datamarket/tobigs-13rd/blob/master/7%EC%A3%BC%EC%B0%A8/week7_NeuralNet_pytorch_%ED%97%88%EC%A0%95%EB%AF%BC.ipynb) | 13기 허정민 |
 | 7week | [Advanced Neural Net \(2\)](https://github.com/tobigs-datamarket/tobigs-13rd/blob/master/7%EC%A3%BC%EC%B0%A8/w7_DL_Framework_csy.ipynb) | 13기 조상연. |
 | 7week | [Advanced Neural Net \(3\)](https://github.com/tobigs-datamarket/tobigs-13rd/blob/master/7%EC%A3%BC%EC%B0%A8/week7_NeuralNet_pytorch_%EC%9D%B4%EC%98%88%EC%A7%80.ipynb) | 13기 이예지. |
+| 9week | [Generative Adversarial Nets](https://github.com/tobigs-datamarket/tobigs-13rd/blob/master/9%EC%A3%BC%EC%B0%A8/week9_GAN_%EC%B5%9C%ED%98%9C%EB%B9%88.ipynb) | 13기 최혜 |
+| 9week | [Deep Residual Learning for Image Recognition](https://github.com/tobigs-datamarket/tobigs-13rd/blob/master/9%EC%A3%BC%EC%B0%A8/week9_CNN_ResNet_%EC%9D%B4%EC%98%88%EC%A7%84.md) | 13기 이예 |
 
 [공식 홈페이지](http://www.datamarket.kr/xe/page_QEhq64)
 
