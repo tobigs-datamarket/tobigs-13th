@@ -33,6 +33,8 @@
 * [Advanced Neural Net \(1\)](tutorial/advanced-neural-net-1.md)
 * [Advanced Neural Net \(2\)](tutorial/advanced-neural-net-2.md)
 * [Advanced Neural Net \(3\)](tutorial/advanced-neural-net-3.md)
+* [Natural Language Processing Basic](tutorial/natural-language-processing-basic.md)
+* [CNN Alexnet](tutorial/cnn-alexnet.md)
 * [Reinforcement Learning\(1\)](tutorial/reinforcement-learning-1.md)
 * [Reinforcement Learning\(2\)](tutorial/reinforcement-learning-2.md)
 * [\(GAN\)Generative Adversarial Nets 논문 리뷰](tutorial/gan-generative-adversarial-network.md)
