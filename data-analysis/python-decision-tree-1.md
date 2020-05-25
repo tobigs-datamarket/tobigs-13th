@@ -514,6 +514,8 @@ Out\[144\]:
 df_split2_f
 ```
 
+{% file src="../.gitbook/assets/1-\_-eda\_-.ipynb" %}
+
 Out\[145\]:
 
 |  | age | income | student | credit\_rating | class\_buys\_computer |
