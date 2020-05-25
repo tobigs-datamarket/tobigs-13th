@@ -1,4 +1,4 @@
-# Navie Bayes 이해와 실습 \(Sklearn,Numpy\)
+# Navie Bayes 방법론
 
 ## Assignment <a id="Assignment"></a>
 

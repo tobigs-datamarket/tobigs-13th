@@ -2,7 +2,7 @@
 description: 13기 조혜원
 ---
 
-# Python을 이용한 Ensemble \(1\)
+# 앙상블
 
 ### 요구사항 
 

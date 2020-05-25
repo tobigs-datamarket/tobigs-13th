@@ -1,0 +1,1465 @@
+---
+description: 13기 이예지
+---
+
+# Advanced Neural Net \(3\)
+
+이예지님은 적은 데이터셋에서 효과적인 Transfer learning을 구현하셨다는 점에서 아주 높은 점수를 드렸습니다. 미리 학습된 MNIST Weight로 초기화 후 학습을 진행하셨는데 해당 데이터셋이 다른 나라 언어의 숫자라는 점을 감안했을 때 아주 적절한 접근법이 아니었나 생각합니다. 또 Multi GPU를 사용하셨던 점도 아주 멋있었습니다.
+
+In \[1\]:
+
+```python
+import numpy as np
+import pandas as pd
+import torch
+from torch.autograd import Variable as Variable
+import torch.nn as nn
+import torch.nn.functional as F
+import torch.optim as optim
+import torch.utils.model_zoo as model_zoo
+from torch.optim import lr_scheduler
+from collections import OrderedDict
+import torchvision
+from torch.utils.data import DataLoader, Dataset
+from torchvision import datasets, models, transforms
+import matplotlib.pyplot as plt
+import time
+import copy
+import os
+
+plt.ion()
+```
+
+In \[2\]:
+
+```python
+train = pd.read_csv("train_df.csv")
+```
+
+In \[3\]:
+
+```python
+train.shape
+```
+
+Out\[3\]:
+
+```text
+(42000, 785)
+```
+
+In \[4\]:
+
+```python
+test = pd.read_csv("test_df.csv")
+```
+
+In \[5\]:
+
+```python
+test.head()
+```
+
+Out\[5\]:
+
+|  | Unnamed: 0 | pixel0 | pixel1 | pixel2 | pixel3 | pixel4 | pixel5 | pixel6 | pixel7 | pixel8 | ... | pixel774 | pixel775 | pixel776 | pixel777 | pixel778 | pixel779 | pixel780 | pixel781 | pixel782 | pixel783 |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| 0 | 57808 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | ... | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| 1 | 4960 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | ... | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| 2 | 35755 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | ... | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| 3 | 15543 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | ... | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| 4 | 48968 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | ... | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+
+5 rows × 785 columnsIn \[6\]:
+
+```python
+test.shape
+```
+
+Out\[6\]:
+
+```text
+(18000, 785)
+```
+
+In \[7\]:
+
+```python
+X = train.iloc[:,1:]
+```
+
+In \[8\]:
+
+```python
+X = X / 255
+```
+
+In \[10\]:
+
+```python
+Y =train.iloc[:,0]
+```
+
+In \[11\]:
+
+```python
+from sklearn.model_selection import train_test_split
+X_train,X_val,Y_train,Y_val = train_test_split(X, Y, train_size=0.85,random_state=10, stratify = train.label)
+```
+
+In \[12\]:
+
+```python
+pd.DataFrame(pd.concat([X_train,Y_train],axis=1)).to_csv("train.csv", index =False)
+```
+
+In \[13\]:
+
+```python
+pd.DataFrame(pd.concat([X_val,Y_val],axis=1)).to_csv("val.csv", index = False)
+```
+
+In \[14\]:
+
+```python
+from torch.utils.data import DataLoader
+```
+
+In \[15\]:
+
+```python
+class BengaliDataset(Dataset):
+    def __init__(self, csv, transform=None):
+#         super(BengaliDataset, self).__init__(transform=transform)
+        self.csv = pd.read_csv(csv)
+        self.image_ids = self.csv.index
+        self.transform = transform
+        
+    def __len__(self):
+        return len(self.csv)
+    
+    def __getitem__(self, index):
+        image = self.csv.iloc[index,:-1]   
+        label = self.csv.iloc[index,-1]         
+        return (torch.tensor(image, dtype=torch.float), torch.tensor(label, dtype=torch.long))
+```
+
+In \[16\]:
+
+```python
+trainset = BengaliDataset("train.csv")
+valset = BengaliDataset("val.csv")
+```
+
+In \[17\]:
+
+```python
+train_loader = DataLoader(trainset,batch_size = 128, shuffle= True)
+test_loader = DataLoader(valset,batch_size = 128, shuffle= True) # validation
+```
+
+#### 모델 설명
+
+MINIST로 학습된 pretrained 모델을 불러와서 fine tunning을 해보자.  
+MLP로 구축된 모델로, MINIST에서 약 98%의 정확도를 보여줌.
+
+[http://ml.cs.tsinghua.edu.cn/~chenxi/pytorch-models/mnist-b07bb66b.pth](http://ml.cs.tsinghua.edu.cn/~chenxi/pytorch-models/mnist-b07bb66b.pth)' 에 저장되어 있는 weight을 가져와서 layer에 initailization.In \[18\]:
+
+```python
+class YEJI(nn.Module):
+    def __init__(self, input_dims, n_hiddens, n_class):
+        super(YEJI, self).__init__()
+        self.input_dims = input_dims
+        current_dims = input_dims
+        layers = OrderedDict()
+
+        if isinstance(n_hiddens, int):
+            n_hiddens = [n_hiddens]
+        else:
+            n_hiddens = list(n_hiddens)
+        for i, n_hidden in enumerate(n_hiddens):
+            layers['fc{}'.format(i+1)] = nn.Linear(current_dims, n_hidden)
+            layers['relu{}'.format(i+1)] = nn.ReLU()
+            layers['drop{}'.format(i+1)] = nn.Dropout(0.2)
+            current_dims = n_hidden
+        layers['out'] = nn.Linear(current_dims, n_class)
+
+        self.model= nn.Sequential(layers)
+        print(self.model)
+
+    def forward(self, input):
+        return self.model.forward(input)
+
+def TOBIGS(input_dims=784, n_hiddens=[256, 256], n_class=10):
+    model = YEJI(input_dims, n_hiddens, n_class)
+    model_urls = {'mnist': 'http://ml.cs.tsinghua.edu.cn/~chenxi/pytorch-models/mnist-b07bb66b.pth'}
+    m = model_zoo.load_url(model_urls['mnist'])
+    state_dict = m.state_dict() if isinstance(m, nn.Module) else m
+    assert isinstance(state_dict, (dict, OrderedDict)), type(state_dict)
+
+    model.load_state_dict(state_dict)
+    return model
+```
+
+In \[19\]:
+
+```python
+model = TOBIGS(input_dims=784, n_hiddens=[256, 256], n_class=10)
+model = torch.nn.DataParallel(model)
+model.cuda()
+
+# optimizer
+optimizer = optim.Adam(model.parameters(), lr=0.0001)
+```
+
+```text
+Sequential(
+  (fc1): Linear(in_features=784, out_features=256, bias=True)
+  (relu1): ReLU()
+  (drop1): Dropout(p=0.2, inplace=False)
+  (fc2): Linear(in_features=256, out_features=256, bias=True)
+  (relu2): ReLU()
+  (drop2): Dropout(p=0.2, inplace=False)
+  (out): Linear(in_features=256, out_features=10, bias=True)
+)
+```
+
+* 초기화된 parameters 확인
+
+In \[20\]:
+
+```python
+for i in model.parameters():
+    print(i)
+```
+
+```text
+Parameter containing:
+tensor([[ 0.0008,  0.0228, -0.0091,  ...,  0.0253,  0.0081,  0.0273],
+        [-0.0286, -0.0235,  0.0097,  ..., -0.0235, -0.0198,  0.0118],
+        [-0.0265,  0.0142, -0.0108,  ..., -0.0061,  0.0135, -0.0146],
+        ...,
+        [ 0.0200, -0.0206,  0.0216,  ...,  0.0163, -0.0218, -0.0243],
+        [-0.0293, -0.0149, -0.0179,  ...,  0.0208,  0.0032, -0.0182],
+        [ 0.0217, -0.0209, -0.0171,  ...,  0.0146, -0.0300, -0.0282]],
+       device='cuda:0', requires_grad=True)
+Parameter containing:
+tensor([-2.4047e-02, -2.2005e-02, -2.2303e-02,  1.4438e-02, -3.4430e-02,
+         2.8466e-02, -3.1873e-03, -3.6541e-02, -3.6213e-02,  9.2949e-03,
+        -2.6346e-03, -1.6759e-03, -2.0798e-02,  1.2568e-02, -2.7282e-02,
+        -2.4870e-02,  1.2711e-02,  9.0569e-03,  3.1330e-02,  7.8664e-03,
+        -9.7114e-03, -5.3195e-03,  6.5779e-03,  4.8497e-03, -1.6000e-02,
+         3.4190e-02, -4.3266e-02, -5.3593e-03, -2.5096e-02, -3.0591e-02,
+         8.3767e-03,  2.1216e-02, -2.9671e-02, -7.8996e-03, -1.8832e-02,
+        -7.9895e-03, -3.5005e-02,  4.6001e-03, -3.0195e-02, -1.5548e-02,
+         9.0775e-03,  3.9423e-03,  7.6245e-03, -2.4586e-02,  1.0790e-02,
+        -1.0323e-02,  1.1045e-02,  1.2789e-02, -3.0072e-04, -2.8499e-02,
+         6.4666e-03, -2.9852e-02,  1.4125e-02, -1.6594e-02,  6.3288e-03,
+        -1.6894e-02,  5.1220e-03,  1.8933e-02,  1.5366e-02, -2.9347e-02,
+        -1.1315e-02,  1.2771e-02, -3.2746e-02,  2.7133e-02,  3.4820e-02,
+         3.0464e-02, -1.8612e-02, -3.2126e-03, -2.1233e-02,  1.5723e-02,
+        -3.5695e-05, -2.1798e-02,  1.0757e-02, -8.8188e-03,  1.3110e-02,
+        -1.2492e-02,  4.2519e-03,  1.6891e-02, -1.5040e-02, -2.3597e-02,
+         2.0468e-02,  3.2935e-03, -2.0889e-02,  2.4569e-02, -2.2651e-02,
+        -2.1116e-04,  2.1280e-02,  3.2295e-04, -8.9682e-03, -4.0092e-02,
+        -3.0855e-02, -1.0467e-02,  9.4466e-03, -3.8804e-02,  1.5002e-02,
+         2.4770e-02, -7.8084e-03, -1.8451e-02,  1.0416e-02, -2.5319e-02,
+        -4.2388e-02,  1.8064e-02, -4.1148e-02, -2.9811e-02,  1.3386e-02,
+         1.8480e-02,  2.1262e-02, -3.4661e-02,  2.7737e-02, -1.1734e-02,
+         2.6220e-02,  3.1765e-03, -2.8184e-02,  4.4263e-03,  1.5305e-02,
+        -4.6155e-02, -1.3197e-02, -1.2637e-02, -3.0189e-02, -1.1002e-02,
+         1.8911e-02, -3.8687e-02, -4.3054e-02,  2.5530e-03,  1.9009e-02,
+        -8.4420e-03, -3.6937e-02,  1.8721e-02, -1.0126e-02, -2.6734e-02,
+        -1.3540e-03, -1.9280e-02,  2.0742e-02, -1.8495e-02, -1.6875e-02,
+        -6.6733e-03,  1.3776e-03,  1.0932e-02, -1.4752e-02,  9.7348e-03,
+         2.8777e-02, -1.5682e-02, -3.4459e-02, -1.8782e-02, -7.4416e-03,
+        -2.5713e-02, -2.4026e-02, -1.7687e-03, -2.8796e-02,  1.5466e-02,
+        -3.7697e-03,  1.4316e-02,  1.9834e-03, -1.1406e-02,  7.3962e-03,
+         2.4126e-02,  5.4612e-03,  3.5611e-02,  1.5196e-02, -2.2867e-02,
+        -2.4045e-02,  1.6837e-02, -1.0262e-02, -3.2728e-02, -8.5198e-03,
+        -1.0734e-03, -2.9398e-02, -1.0442e-02,  8.1003e-04, -3.7155e-03,
+         4.0094e-03,  4.0704e-03, -2.4243e-02,  1.2542e-02, -1.5670e-02,
+         2.5404e-02, -1.4243e-02, -1.1428e-03,  2.0786e-02, -1.3553e-03,
+        -1.3778e-02, -4.2928e-02, -3.0567e-02, -2.5173e-02, -2.2701e-02,
+        -2.9227e-02, -3.4862e-02,  8.3792e-03,  3.9899e-03,  2.0852e-02,
+        -2.6710e-02,  2.9947e-03, -1.2336e-02, -1.9209e-02,  3.1653e-02,
+         1.8848e-04, -1.8542e-02,  2.3055e-02, -7.9647e-03,  5.5250e-04,
+        -1.8495e-02,  1.4255e-03, -3.7941e-02,  3.8953e-03,  1.1587e-02,
+         2.8674e-03,  2.6969e-03, -3.2376e-03,  2.8830e-02, -3.1154e-02,
+        -9.4864e-03,  1.0743e-03, -1.5431e-02,  2.0880e-03, -1.3650e-02,
+        -2.2170e-03, -6.5047e-03,  1.3019e-02, -7.6229e-03,  1.3460e-02,
+         3.9254e-03, -2.5288e-02,  1.1412e-02, -6.7232e-03, -1.0537e-02,
+         1.5495e-02,  1.7443e-02, -3.1923e-02,  9.8591e-03,  1.9909e-02,
+        -2.5034e-02,  2.2137e-02, -1.4152e-03, -5.2964e-03, -8.4245e-03,
+        -2.6398e-02, -2.5350e-02, -2.4958e-02, -2.8014e-02, -2.3828e-02,
+         1.1054e-02, -8.1813e-03,  1.9536e-02, -7.5279e-03, -2.8080e-02,
+        -1.6022e-02, -3.9783e-02, -3.0921e-02, -1.2174e-02, -7.8339e-03,
+        -5.0126e-03,  2.7386e-02, -6.2526e-03, -3.0314e-02, -8.6337e-03,
+         2.8741e-02], device='cuda:0', requires_grad=True)
+Parameter containing:
+tensor([[ 1.9542e-02, -3.2533e-03, -7.2425e-02,  ..., -3.2647e-02,
+          7.4259e-02, -2.6186e-03],
+        [-4.1125e-02, -2.1811e-02,  1.8511e-02,  ...,  5.0171e-02,
+         -5.5135e-02, -1.1747e-01],
+        [ 9.3704e-02,  2.1296e-02,  3.3339e-02,  ..., -1.4726e-02,
+         -5.8037e-02,  2.1148e-02],
+        ...,
+        [ 5.8484e-02,  4.8540e-02,  2.9483e-02,  ..., -1.4176e-02,
+          5.6538e-02,  5.0408e-02],
+        [-5.8548e-03, -2.9874e-02,  5.5164e-02,  ..., -5.4204e-02,
+         -2.1725e-02,  4.2473e-02],
+        [-4.4845e-02,  3.9385e-02,  1.9515e-02,  ..., -3.0702e-02,
+         -7.1189e-06,  1.6565e-02]], device='cuda:0', requires_grad=True)
+Parameter containing:
+tensor([-0.0369, -0.0105,  0.0470, -0.0358,  0.0252,  0.0292, -0.0357,  0.0050,
+        -0.0146,  0.0116,  0.0585, -0.0275,  0.0239,  0.0326, -0.0049,  0.0533,
+        -0.0023,  0.0557, -0.0213, -0.0502,  0.0082, -0.0247, -0.0219,  0.0222,
+         0.0554, -0.0122,  0.0436,  0.0742, -0.0181, -0.0187,  0.0193, -0.0222,
+        -0.0315, -0.0103,  0.0021, -0.0124, -0.0016,  0.0364,  0.0547,  0.0093,
+         0.0519,  0.0061,  0.0050,  0.0540, -0.0441, -0.0013,  0.0915,  0.0354,
+         0.0392,  0.0081, -0.0018,  0.0366,  0.0370,  0.0271,  0.0260, -0.0053,
+         0.0132,  0.0095,  0.0481, -0.0085, -0.0357,  0.0702,  0.0712, -0.0193,
+         0.0611,  0.0586,  0.0304,  0.0541,  0.0152, -0.0248,  0.0523,  0.0940,
+        -0.0190, -0.0506,  0.0006, -0.0572,  0.0431,  0.0063,  0.0149,  0.0712,
+        -0.0063, -0.0453,  0.0052,  0.0315,  0.0368, -0.0151, -0.0224,  0.0477,
+         0.0658, -0.0129, -0.0322,  0.0105, -0.0200, -0.0141, -0.0265,  0.0474,
+        -0.0477,  0.0269,  0.0038,  0.0304, -0.0145,  0.0561,  0.0351, -0.0169,
+        -0.0474, -0.0043,  0.0504,  0.0061,  0.0188,  0.0682,  0.0597,  0.0012,
+        -0.0277,  0.0592,  0.0079, -0.0094,  0.0075, -0.0453, -0.0046, -0.0034,
+        -0.0431,  0.0621,  0.0819,  0.0207, -0.0454,  0.0175, -0.0012, -0.0134,
+         0.0576, -0.0518, -0.0316, -0.0313, -0.0001,  0.0056,  0.0284,  0.0932,
+         0.0119,  0.0024,  0.0026, -0.0193,  0.0641, -0.0452, -0.0179,  0.0311,
+        -0.0809, -0.0019,  0.0028, -0.0674, -0.0585,  0.0062,  0.0195, -0.0106,
+        -0.0225, -0.0413, -0.0158, -0.0466,  0.0014,  0.0527, -0.0142,  0.0307,
+         0.0960,  0.0507,  0.0760,  0.0317,  0.0395, -0.0494,  0.0117,  0.0367,
+         0.0359, -0.0155,  0.0446,  0.0224,  0.0017, -0.0083,  0.0104,  0.0040,
+        -0.0607,  0.0388,  0.0656,  0.0003,  0.0344,  0.0303,  0.0206, -0.0606,
+         0.0391,  0.0168,  0.0443, -0.0162,  0.0070,  0.0739, -0.0081,  0.0222,
+        -0.0259,  0.0095,  0.0810, -0.0323,  0.1087,  0.0667,  0.0430, -0.0235,
+         0.0338,  0.0139, -0.0014, -0.0159,  0.0461,  0.0018,  0.0160,  0.0711,
+         0.0136, -0.0515,  0.0307, -0.0519,  0.0158, -0.0155, -0.0259, -0.0356,
+        -0.0055,  0.0289,  0.0891,  0.0016,  0.0845,  0.0309,  0.0087,  0.0243,
+         0.0331, -0.0248,  0.0007,  0.0615,  0.0419,  0.0145, -0.0420, -0.0575,
+        -0.0418,  0.0458,  0.0825, -0.0384,  0.0903, -0.0284, -0.0006,  0.0496,
+         0.0197, -0.0088,  0.0192,  0.0221,  0.0143,  0.0633,  0.0540,  0.0644,
+        -0.0302,  0.0014,  0.0245,  0.0572,  0.0686, -0.0314,  0.0451, -0.0088],
+       device='cuda:0', requires_grad=True)
+Parameter containing:
+tensor([[-0.0345,  0.2439, -0.1462,  ..., -0.0050, -0.0480,  0.0150],
+        [ 0.1230,  0.0682,  0.0485,  ..., -0.1220,  0.1505, -0.0296],
+        [-0.1156,  0.2065, -0.1886,  ...,  0.1253,  0.0123, -0.0875],
+        ...,
+        [-0.0858, -0.1055,  0.1441,  ...,  0.1067, -0.1549,  0.0007],
+        [-0.2248, -0.1508, -0.1592,  ...,  0.0465, -0.2895,  0.1776],
+        [ 0.1109,  0.0210,  0.1080,  ..., -0.0592,  0.2578, -0.0313]],
+       device='cuda:0', requires_grad=True)
+Parameter containing:
+tensor([-0.0530, -0.0300, -0.0313,  0.0078,  0.0766, -0.1189, -0.0117, -0.0271,
+         0.2031,  0.0601], device='cuda:0', requires_grad=True)
+```
+
+In \[21\]:
+
+```python
+def expand_user(path):
+    return os.path.abspath(os.path.expanduser(path))
+
+def model_snapshot(model, new_file, old_file=None, verbose = True):
+    if isinstance(model, torch.nn.DataParallel):
+        model = model.module
+    if old_file and os.path.exists(expand_user(old_file)):
+        print("Removing old model {}".format(expand_user(old_file)))
+        os.remove(expand_user(old_file))
+    if verbose:
+        print("Saving model to {}".format(expand_user(new_file)))
+
+    state_dict = OrderedDict()
+    for k, v in model.state_dict().items():
+        if v.is_cuda:
+            v = v.cpu()
+        state_dict[k] = v
+    torch.save(state_dict, expand_user(new_file))
+```
+
+In \[24\]:
+
+```python
+best_acc = 0.0
+old_file = None
+```
+
+In \[23\]:
+
+```python
+for epoch in range(10):
+        model.train()
+        for batch_idx, (data, target) in enumerate(train_loader):
+            indx_target = target.clone()
+            data, target = data.cuda(), target.cuda()
+            data, target = Variable(data), Variable(target)
+
+            optimizer.zero_grad()
+            output = model(data)
+#             output = nn.Softmax(output)
+#             loss = F.mse_loss(output, target)
+            loss=F.cross_entropy(output, target)
+            loss.backward()
+            optimizer.step()
+
+            if batch_idx % 10 ==0 and batch_idx > 0:
+                pred = output.data.max(1)[1]  # get the index of the max log-probability
+                correct = pred.cpu().eq(indx_target).sum()
+                acc = correct * 1.0 / len(data)
+                print('Train Epoch: {} [{}/{}] Loss: {:.6f} Acc: {:.4f}'.format(
+                    epoch, batch_idx * len(data), len(train_loader.dataset),
+                    loss, acc))
+
+        model.eval()
+        test_loss = 0
+        correct = 0
+        for data, target in test_loader:
+            indx_target = target.clone()
+            data, target = data.cuda(), target.cuda()
+            data, target = Variable(data, volatile=True), Variable(target)
+            output = model(data)
+            test_loss += F.cross_entropy(output, target)
+            pred = output.data.max(1)[1]
+            correct += pred.cpu().eq(indx_target).sum()
+
+        test_loss = test_loss / len(test_loader) 
+        acc = 100. * correct / float(len(test_loader.dataset))
+        print('\tTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)'.format(
+            test_loss, correct, len(test_loader.dataset), acc))
+        
+        if acc > best_acc:
+            new_file = os.path.join('./', 'best-{}.pth'.format(epoch))
+            model_snapshot(model, new_file, old_file=old_file)
+            best_acc = acc
+            old_file = new_file
+```
+
+```text
+C:\Users\fdal\Miniconda3\envs\torch\lib\site-packages\torch\cuda\nccl.py:24: UserWarning: PyTorch is not compiled with NCCL support
+  warnings.warn('PyTorch is not compiled with NCCL support')
+```
+
+```text
+Train Epoch: 0 [1280/35700] Loss: 2.411509 Acc: 0.2500
+Train Epoch: 0 [2560/35700] Loss: 2.049485 Acc: 0.3281
+Train Epoch: 0 [3840/35700] Loss: 1.733531 Acc: 0.3828
+Train Epoch: 0 [5120/35700] Loss: 1.725729 Acc: 0.4453
+Train Epoch: 0 [6400/35700] Loss: 1.459448 Acc: 0.5000
+Train Epoch: 0 [7680/35700] Loss: 1.327650 Acc: 0.5312
+Train Epoch: 0 [8960/35700] Loss: 1.050043 Acc: 0.7500
+Train Epoch: 0 [10240/35700] Loss: 0.945391 Acc: 0.6953
+Train Epoch: 0 [11520/35700] Loss: 0.903133 Acc: 0.6875
+Train Epoch: 0 [12800/35700] Loss: 0.920729 Acc: 0.7266
+Train Epoch: 0 [14080/35700] Loss: 0.612463 Acc: 0.8750
+Train Epoch: 0 [15360/35700] Loss: 0.730327 Acc: 0.8047
+Train Epoch: 0 [16640/35700] Loss: 0.532178 Acc: 0.8828
+Train Epoch: 0 [17920/35700] Loss: 0.490356 Acc: 0.8828
+Train Epoch: 0 [19200/35700] Loss: 0.559360 Acc: 0.8359
+Train Epoch: 0 [20480/35700] Loss: 0.412116 Acc: 0.8672
+Train Epoch: 0 [21760/35700] Loss: 0.362199 Acc: 0.9062
+Train Epoch: 0 [23040/35700] Loss: 0.464376 Acc: 0.8672
+Train Epoch: 0 [24320/35700] Loss: 0.361374 Acc: 0.8984
+Train Epoch: 0 [25600/35700] Loss: 0.320731 Acc: 0.9297
+Train Epoch: 0 [26880/35700] Loss: 0.265266 Acc: 0.9609
+Train Epoch: 0 [28160/35700] Loss: 0.350159 Acc: 0.9219
+Train Epoch: 0 [29440/35700] Loss: 0.405501 Acc: 0.9141
+Train Epoch: 0 [30720/35700] Loss: 0.327956 Acc: 0.9062
+Train Epoch: 0 [32000/35700] Loss: 0.248671 Acc: 0.9219
+Train Epoch: 0 [33280/35700] Loss: 0.400198 Acc: 0.8984
+Train Epoch: 0 [34560/35700] Loss: 0.277630 Acc: 0.9141
+```
+
+```text
+C:\Users\fdal\AppData\Roaming\Python\Python37\site-packages\ipykernel_launcher.py:30: UserWarning: volatile was removed and now has no effect. Use `with torch.no_grad():` instead.
+```
+
+```text
+	Test set: Average loss: 0.2049, Accuracy: 5982/6300 (95%)
+Saving model to C:\Users\fdal\Desktop\bigs\TOBIGS\best-0.pth
+Train Epoch: 1 [1280/35700] Loss: 0.279817 Acc: 0.9375
+Train Epoch: 1 [2560/35700] Loss: 0.150849 Acc: 0.9609
+Train Epoch: 1 [3840/35700] Loss: 0.354600 Acc: 0.9062
+Train Epoch: 1 [5120/35700] Loss: 0.259003 Acc: 0.9297
+Train Epoch: 1 [6400/35700] Loss: 0.284537 Acc: 0.9453
+Train Epoch: 1 [7680/35700] Loss: 0.151071 Acc: 0.9688
+Train Epoch: 1 [8960/35700] Loss: 0.200743 Acc: 0.9609
+Train Epoch: 1 [10240/35700] Loss: 0.154068 Acc: 0.9609
+Train Epoch: 1 [11520/35700] Loss: 0.291180 Acc: 0.9219
+Train Epoch: 1 [12800/35700] Loss: 0.214344 Acc: 0.9609
+Train Epoch: 1 [14080/35700] Loss: 0.279012 Acc: 0.9062
+Train Epoch: 1 [15360/35700] Loss: 0.146066 Acc: 0.9609
+Train Epoch: 1 [16640/35700] Loss: 0.146616 Acc: 0.9688
+Train Epoch: 1 [17920/35700] Loss: 0.211097 Acc: 0.9375
+Train Epoch: 1 [19200/35700] Loss: 0.163379 Acc: 0.9609
+Train Epoch: 1 [20480/35700] Loss: 0.222867 Acc: 0.9375
+Train Epoch: 1 [21760/35700] Loss: 0.189005 Acc: 0.9531
+Train Epoch: 1 [23040/35700] Loss: 0.228114 Acc: 0.9297
+Train Epoch: 1 [24320/35700] Loss: 0.280236 Acc: 0.9141
+Train Epoch: 1 [25600/35700] Loss: 0.194178 Acc: 0.9531
+Train Epoch: 1 [26880/35700] Loss: 0.202265 Acc: 0.9453
+Train Epoch: 1 [28160/35700] Loss: 0.171651 Acc: 0.9609
+Train Epoch: 1 [29440/35700] Loss: 0.202334 Acc: 0.9453
+Train Epoch: 1 [30720/35700] Loss: 0.185218 Acc: 0.9375
+Train Epoch: 1 [32000/35700] Loss: 0.092796 Acc: 0.9766
+Train Epoch: 1 [33280/35700] Loss: 0.149078 Acc: 0.9609
+Train Epoch: 1 [34560/35700] Loss: 0.233831 Acc: 0.9531
+	Test set: Average loss: 0.1279, Accuracy: 6094/6300 (97%)
+Removing old model C:\Users\fdal\Desktop\bigs\TOBIGS\best-0.pth
+Saving model to C:\Users\fdal\Desktop\bigs\TOBIGS\best-1.pth
+Train Epoch: 2 [1280/35700] Loss: 0.150390 Acc: 0.9531
+Train Epoch: 2 [2560/35700] Loss: 0.215843 Acc: 0.9297
+Train Epoch: 2 [3840/35700] Loss: 0.094746 Acc: 0.9688
+Train Epoch: 2 [5120/35700] Loss: 0.226026 Acc: 0.9375
+Train Epoch: 2 [6400/35700] Loss: 0.069569 Acc: 0.9922
+Train Epoch: 2 [7680/35700] Loss: 0.243328 Acc: 0.9297
+Train Epoch: 2 [8960/35700] Loss: 0.119951 Acc: 0.9688
+Train Epoch: 2 [10240/35700] Loss: 0.147673 Acc: 0.9609
+Train Epoch: 2 [11520/35700] Loss: 0.122897 Acc: 0.9688
+Train Epoch: 2 [12800/35700] Loss: 0.122860 Acc: 0.9688
+Train Epoch: 2 [14080/35700] Loss: 0.105702 Acc: 0.9688
+Train Epoch: 2 [15360/35700] Loss: 0.100719 Acc: 0.9688
+Train Epoch: 2 [16640/35700] Loss: 0.287098 Acc: 0.9141
+Train Epoch: 2 [17920/35700] Loss: 0.178424 Acc: 0.9609
+Train Epoch: 2 [19200/35700] Loss: 0.123001 Acc: 0.9688
+Train Epoch: 2 [20480/35700] Loss: 0.162992 Acc: 0.9531
+Train Epoch: 2 [21760/35700] Loss: 0.083015 Acc: 0.9766
+Train Epoch: 2 [23040/35700] Loss: 0.144118 Acc: 0.9766
+Train Epoch: 2 [24320/35700] Loss: 0.151573 Acc: 0.9453
+Train Epoch: 2 [25600/35700] Loss: 0.185852 Acc: 0.9453
+Train Epoch: 2 [26880/35700] Loss: 0.076854 Acc: 0.9844
+Train Epoch: 2 [28160/35700] Loss: 0.157314 Acc: 0.9531
+Train Epoch: 2 [29440/35700] Loss: 0.111755 Acc: 0.9609
+Train Epoch: 2 [30720/35700] Loss: 0.119584 Acc: 0.9609
+Train Epoch: 2 [32000/35700] Loss: 0.133661 Acc: 0.9609
+Train Epoch: 2 [33280/35700] Loss: 0.117783 Acc: 0.9688
+Train Epoch: 2 [34560/35700] Loss: 0.126844 Acc: 0.9766
+	Test set: Average loss: 0.1032, Accuracy: 6128/6300 (97%)
+Removing old model C:\Users\fdal\Desktop\bigs\TOBIGS\best-1.pth
+Saving model to C:\Users\fdal\Desktop\bigs\TOBIGS\best-2.pth
+Train Epoch: 3 [1280/35700] Loss: 0.098966 Acc: 0.9766
+Train Epoch: 3 [2560/35700] Loss: 0.082034 Acc: 0.9844
+Train Epoch: 3 [3840/35700] Loss: 0.107756 Acc: 0.9453
+Train Epoch: 3 [5120/35700] Loss: 0.152048 Acc: 0.9531
+Train Epoch: 3 [6400/35700] Loss: 0.081050 Acc: 0.9688
+Train Epoch: 3 [7680/35700] Loss: 0.093254 Acc: 0.9766
+Train Epoch: 3 [8960/35700] Loss: 0.056750 Acc: 0.9766
+Train Epoch: 3 [10240/35700] Loss: 0.124104 Acc: 0.9766
+Train Epoch: 3 [11520/35700] Loss: 0.110204 Acc: 0.9609
+Train Epoch: 3 [12800/35700] Loss: 0.080410 Acc: 0.9766
+Train Epoch: 3 [14080/35700] Loss: 0.097995 Acc: 0.9844
+Train Epoch: 3 [15360/35700] Loss: 0.061089 Acc: 0.9609
+Train Epoch: 3 [16640/35700] Loss: 0.107936 Acc: 0.9688
+Train Epoch: 3 [17920/35700] Loss: 0.122330 Acc: 0.9531
+Train Epoch: 3 [19200/35700] Loss: 0.115403 Acc: 0.9688
+Train Epoch: 3 [20480/35700] Loss: 0.100684 Acc: 0.9688
+Train Epoch: 3 [21760/35700] Loss: 0.181690 Acc: 0.9453
+Train Epoch: 3 [23040/35700] Loss: 0.111888 Acc: 0.9531
+Train Epoch: 3 [24320/35700] Loss: 0.080385 Acc: 0.9766
+Train Epoch: 3 [25600/35700] Loss: 0.075962 Acc: 0.9688
+Train Epoch: 3 [26880/35700] Loss: 0.113938 Acc: 0.9688
+Train Epoch: 3 [28160/35700] Loss: 0.067381 Acc: 0.9766
+Train Epoch: 3 [29440/35700] Loss: 0.061363 Acc: 0.9844
+Train Epoch: 3 [30720/35700] Loss: 0.095419 Acc: 0.9844
+Train Epoch: 3 [32000/35700] Loss: 0.133193 Acc: 0.9609
+Train Epoch: 3 [33280/35700] Loss: 0.190877 Acc: 0.9531
+Train Epoch: 3 [34560/35700] Loss: 0.085142 Acc: 0.9609
+	Test set: Average loss: 0.0865, Accuracy: 6148/6300 (98%)
+Removing old model C:\Users\fdal\Desktop\bigs\TOBIGS\best-2.pth
+Saving model to C:\Users\fdal\Desktop\bigs\TOBIGS\best-3.pth
+Train Epoch: 4 [1280/35700] Loss: 0.244856 Acc: 0.9219
+Train Epoch: 4 [2560/35700] Loss: 0.082025 Acc: 0.9922
+Train Epoch: 4 [3840/35700] Loss: 0.071594 Acc: 0.9844
+Train Epoch: 4 [5120/35700] Loss: 0.104873 Acc: 0.9766
+Train Epoch: 4 [6400/35700] Loss: 0.101972 Acc: 0.9688
+Train Epoch: 4 [7680/35700] Loss: 0.080158 Acc: 0.9766
+Train Epoch: 4 [8960/35700] Loss: 0.058737 Acc: 0.9922
+Train Epoch: 4 [10240/35700] Loss: 0.070426 Acc: 0.9688
+Train Epoch: 4 [11520/35700] Loss: 0.123793 Acc: 0.9609
+Train Epoch: 4 [12800/35700] Loss: 0.088333 Acc: 0.9844
+Train Epoch: 4 [14080/35700] Loss: 0.108341 Acc: 0.9609
+Train Epoch: 4 [15360/35700] Loss: 0.153622 Acc: 0.9531
+Train Epoch: 4 [16640/35700] Loss: 0.056079 Acc: 0.9766
+Train Epoch: 4 [17920/35700] Loss: 0.096348 Acc: 0.9766
+Train Epoch: 4 [19200/35700] Loss: 0.070801 Acc: 0.9688
+Train Epoch: 4 [20480/35700] Loss: 0.160555 Acc: 0.9766
+Train Epoch: 4 [21760/35700] Loss: 0.166359 Acc: 0.9453
+Train Epoch: 4 [23040/35700] Loss: 0.091487 Acc: 0.9844
+Train Epoch: 4 [24320/35700] Loss: 0.115797 Acc: 0.9531
+Train Epoch: 4 [25600/35700] Loss: 0.060580 Acc: 0.9844
+Train Epoch: 4 [26880/35700] Loss: 0.072652 Acc: 0.9766
+Train Epoch: 4 [28160/35700] Loss: 0.058664 Acc: 0.9844
+Train Epoch: 4 [29440/35700] Loss: 0.088584 Acc: 0.9766
+Train Epoch: 4 [30720/35700] Loss: 0.052374 Acc: 0.9844
+Train Epoch: 4 [32000/35700] Loss: 0.084916 Acc: 0.9609
+Train Epoch: 4 [33280/35700] Loss: 0.050880 Acc: 0.9922
+Train Epoch: 4 [34560/35700] Loss: 0.089450 Acc: 0.9688
+	Test set: Average loss: 0.0793, Accuracy: 6169/6300 (98%)
+Removing old model C:\Users\fdal\Desktop\bigs\TOBIGS\best-3.pth
+Saving model to C:\Users\fdal\Desktop\bigs\TOBIGS\best-4.pth
+Train Epoch: 5 [1280/35700] Loss: 0.125959 Acc: 0.9688
+Train Epoch: 5 [2560/35700] Loss: 0.078221 Acc: 0.9688
+Train Epoch: 5 [3840/35700] Loss: 0.147597 Acc: 0.9453
+Train Epoch: 5 [5120/35700] Loss: 0.071319 Acc: 0.9609
+Train Epoch: 5 [6400/35700] Loss: 0.127567 Acc: 0.9609
+Train Epoch: 5 [7680/35700] Loss: 0.098660 Acc: 0.9688
+Train Epoch: 5 [8960/35700] Loss: 0.112339 Acc: 0.9531
+Train Epoch: 5 [10240/35700] Loss: 0.066072 Acc: 0.9844
+Train Epoch: 5 [11520/35700] Loss: 0.116722 Acc: 0.9609
+Train Epoch: 5 [12800/35700] Loss: 0.089298 Acc: 0.9844
+Train Epoch: 5 [14080/35700] Loss: 0.066283 Acc: 0.9844
+Train Epoch: 5 [15360/35700] Loss: 0.146485 Acc: 0.9531
+Train Epoch: 5 [16640/35700] Loss: 0.135166 Acc: 0.9609
+Train Epoch: 5 [17920/35700] Loss: 0.101031 Acc: 0.9531
+Train Epoch: 5 [19200/35700] Loss: 0.109770 Acc: 0.9766
+Train Epoch: 5 [20480/35700] Loss: 0.064832 Acc: 0.9844
+Train Epoch: 5 [21760/35700] Loss: 0.106731 Acc: 0.9766
+Train Epoch: 5 [23040/35700] Loss: 0.049732 Acc: 0.9844
+Train Epoch: 5 [24320/35700] Loss: 0.056308 Acc: 0.9766
+Train Epoch: 5 [25600/35700] Loss: 0.113249 Acc: 0.9766
+Train Epoch: 5 [26880/35700] Loss: 0.091497 Acc: 0.9922
+Train Epoch: 5 [28160/35700] Loss: 0.060365 Acc: 0.9766
+Train Epoch: 5 [29440/35700] Loss: 0.052726 Acc: 0.9922
+Train Epoch: 5 [30720/35700] Loss: 0.063323 Acc: 0.9766
+Train Epoch: 5 [32000/35700] Loss: 0.096192 Acc: 0.9609
+Train Epoch: 5 [33280/35700] Loss: 0.149671 Acc: 0.9688
+Train Epoch: 5 [34560/35700] Loss: 0.063375 Acc: 0.9844
+	Test set: Average loss: 0.0729, Accuracy: 6179/6300 (98%)
+Removing old model C:\Users\fdal\Desktop\bigs\TOBIGS\best-4.pth
+Saving model to C:\Users\fdal\Desktop\bigs\TOBIGS\best-5.pth
+Train Epoch: 6 [1280/35700] Loss: 0.071985 Acc: 0.9766
+Train Epoch: 6 [2560/35700] Loss: 0.094118 Acc: 0.9688
+Train Epoch: 6 [3840/35700] Loss: 0.086459 Acc: 0.9688
+Train Epoch: 6 [5120/35700] Loss: 0.114306 Acc: 0.9688
+Train Epoch: 6 [6400/35700] Loss: 0.128841 Acc: 0.9766
+Train Epoch: 6 [7680/35700] Loss: 0.065532 Acc: 0.9844
+Train Epoch: 6 [8960/35700] Loss: 0.101370 Acc: 0.9609
+Train Epoch: 6 [10240/35700] Loss: 0.073002 Acc: 0.9688
+Train Epoch: 6 [11520/35700] Loss: 0.083907 Acc: 0.9766
+Train Epoch: 6 [12800/35700] Loss: 0.051260 Acc: 0.9844
+Train Epoch: 6 [14080/35700] Loss: 0.106676 Acc: 0.9766
+Train Epoch: 6 [15360/35700] Loss: 0.056815 Acc: 0.9688
+Train Epoch: 6 [16640/35700] Loss: 0.040409 Acc: 0.9844
+Train Epoch: 6 [17920/35700] Loss: 0.156995 Acc: 0.9219
+Train Epoch: 6 [19200/35700] Loss: 0.067112 Acc: 0.9766
+Train Epoch: 6 [20480/35700] Loss: 0.074414 Acc: 0.9688
+Train Epoch: 6 [21760/35700] Loss: 0.081186 Acc: 0.9844
+Train Epoch: 6 [23040/35700] Loss: 0.041688 Acc: 0.9844
+Train Epoch: 6 [24320/35700] Loss: 0.143659 Acc: 0.9609
+Train Epoch: 6 [25600/35700] Loss: 0.043329 Acc: 0.9922
+Train Epoch: 6 [26880/35700] Loss: 0.058001 Acc: 0.9844
+Train Epoch: 6 [28160/35700] Loss: 0.061538 Acc: 0.9688
+Train Epoch: 6 [29440/35700] Loss: 0.028881 Acc: 0.9922
+Train Epoch: 6 [30720/35700] Loss: 0.043342 Acc: 0.9922
+Train Epoch: 6 [32000/35700] Loss: 0.060362 Acc: 0.9844
+Train Epoch: 6 [33280/35700] Loss: 0.082402 Acc: 0.9688
+Train Epoch: 6 [34560/35700] Loss: 0.025205 Acc: 1.0000
+	Test set: Average loss: 0.0662, Accuracy: 6185/6300 (98%)
+Removing old model C:\Users\fdal\Desktop\bigs\TOBIGS\best-5.pth
+Saving model to C:\Users\fdal\Desktop\bigs\TOBIGS\best-6.pth
+Train Epoch: 7 [1280/35700] Loss: 0.130955 Acc: 0.9609
+Train Epoch: 7 [2560/35700] Loss: 0.026536 Acc: 1.0000
+Train Epoch: 7 [3840/35700] Loss: 0.065081 Acc: 0.9766
+Train Epoch: 7 [5120/35700] Loss: 0.026630 Acc: 1.0000
+Train Epoch: 7 [6400/35700] Loss: 0.032714 Acc: 0.9922
+Train Epoch: 7 [7680/35700] Loss: 0.046398 Acc: 0.9844
+Train Epoch: 7 [8960/35700] Loss: 0.099613 Acc: 0.9688
+Train Epoch: 7 [10240/35700] Loss: 0.061718 Acc: 0.9922
+Train Epoch: 7 [11520/35700] Loss: 0.056224 Acc: 0.9844
+Train Epoch: 7 [12800/35700] Loss: 0.112682 Acc: 0.9688
+Train Epoch: 7 [14080/35700] Loss: 0.085372 Acc: 0.9766
+Train Epoch: 7 [15360/35700] Loss: 0.083145 Acc: 0.9609
+Train Epoch: 7 [16640/35700] Loss: 0.086112 Acc: 0.9766
+Train Epoch: 7 [17920/35700] Loss: 0.076244 Acc: 0.9844
+Train Epoch: 7 [19200/35700] Loss: 0.029705 Acc: 0.9922
+Train Epoch: 7 [20480/35700] Loss: 0.033495 Acc: 0.9922
+Train Epoch: 7 [21760/35700] Loss: 0.076668 Acc: 0.9922
+Train Epoch: 7 [23040/35700] Loss: 0.071314 Acc: 0.9844
+Train Epoch: 7 [24320/35700] Loss: 0.071869 Acc: 0.9844
+Train Epoch: 7 [25600/35700] Loss: 0.047871 Acc: 0.9844
+Train Epoch: 7 [26880/35700] Loss: 0.081042 Acc: 0.9844
+Train Epoch: 7 [28160/35700] Loss: 0.044356 Acc: 0.9844
+Train Epoch: 7 [29440/35700] Loss: 0.076051 Acc: 0.9766
+Train Epoch: 7 [30720/35700] Loss: 0.087956 Acc: 0.9844
+Train Epoch: 7 [32000/35700] Loss: 0.040518 Acc: 0.9922
+Train Epoch: 7 [33280/35700] Loss: 0.088768 Acc: 0.9766
+Train Epoch: 7 [34560/35700] Loss: 0.044392 Acc: 0.9844
+	Test set: Average loss: 0.0617, Accuracy: 6197/6300 (98%)
+Removing old model C:\Users\fdal\Desktop\bigs\TOBIGS\best-6.pth
+Saving model to C:\Users\fdal\Desktop\bigs\TOBIGS\best-7.pth
+Train Epoch: 8 [1280/35700] Loss: 0.068184 Acc: 0.9922
+Train Epoch: 8 [2560/35700] Loss: 0.040129 Acc: 0.9922
+Train Epoch: 8 [3840/35700] Loss: 0.023896 Acc: 0.9922
+Train Epoch: 8 [5120/35700] Loss: 0.088726 Acc: 0.9844
+Train Epoch: 8 [6400/35700] Loss: 0.086779 Acc: 0.9766
+Train Epoch: 8 [7680/35700] Loss: 0.101970 Acc: 0.9766
+Train Epoch: 8 [8960/35700] Loss: 0.053920 Acc: 0.9922
+Train Epoch: 8 [10240/35700] Loss: 0.054325 Acc: 0.9844
+Train Epoch: 8 [11520/35700] Loss: 0.060125 Acc: 0.9766
+Train Epoch: 8 [12800/35700] Loss: 0.052874 Acc: 0.9844
+Train Epoch: 8 [14080/35700] Loss: 0.052888 Acc: 0.9922
+Train Epoch: 8 [15360/35700] Loss: 0.031786 Acc: 0.9922
+Train Epoch: 8 [16640/35700] Loss: 0.114819 Acc: 0.9844
+Train Epoch: 8 [17920/35700] Loss: 0.126417 Acc: 0.9531
+Train Epoch: 8 [19200/35700] Loss: 0.093007 Acc: 0.9688
+Train Epoch: 8 [20480/35700] Loss: 0.044209 Acc: 0.9844
+Train Epoch: 8 [21760/35700] Loss: 0.059888 Acc: 0.9922
+Train Epoch: 8 [23040/35700] Loss: 0.055443 Acc: 0.9922
+Train Epoch: 8 [24320/35700] Loss: 0.048572 Acc: 0.9922
+Train Epoch: 8 [25600/35700] Loss: 0.023349 Acc: 1.0000
+Train Epoch: 8 [26880/35700] Loss: 0.073240 Acc: 0.9766
+Train Epoch: 8 [28160/35700] Loss: 0.031457 Acc: 1.0000
+Train Epoch: 8 [29440/35700] Loss: 0.027073 Acc: 0.9922
+Train Epoch: 8 [30720/35700] Loss: 0.031680 Acc: 1.0000
+Train Epoch: 8 [32000/35700] Loss: 0.062229 Acc: 0.9844
+Train Epoch: 8 [33280/35700] Loss: 0.039874 Acc: 0.9922
+Train Epoch: 8 [34560/35700] Loss: 0.024605 Acc: 1.0000
+	Test set: Average loss: 0.0601, Accuracy: 6197/6300 (98%)
+Train Epoch: 9 [1280/35700] Loss: 0.016230 Acc: 1.0000
+Train Epoch: 9 [2560/35700] Loss: 0.046002 Acc: 0.9922
+Train Epoch: 9 [3840/35700] Loss: 0.023645 Acc: 1.0000
+Train Epoch: 9 [5120/35700] Loss: 0.043494 Acc: 0.9922
+Train Epoch: 9 [6400/35700] Loss: 0.043088 Acc: 0.9844
+Train Epoch: 9 [7680/35700] Loss: 0.022493 Acc: 1.0000
+Train Epoch: 9 [8960/35700] Loss: 0.084896 Acc: 0.9766
+Train Epoch: 9 [10240/35700] Loss: 0.056327 Acc: 0.9922
+Train Epoch: 9 [11520/35700] Loss: 0.045696 Acc: 0.9844
+Train Epoch: 9 [12800/35700] Loss: 0.028865 Acc: 0.9922
+Train Epoch: 9 [14080/35700] Loss: 0.046354 Acc: 0.9844
+Train Epoch: 9 [15360/35700] Loss: 0.059668 Acc: 0.9688
+Train Epoch: 9 [16640/35700] Loss: 0.083914 Acc: 0.9531
+Train Epoch: 9 [17920/35700] Loss: 0.074662 Acc: 0.9766
+Train Epoch: 9 [19200/35700] Loss: 0.039048 Acc: 0.9922
+Train Epoch: 9 [20480/35700] Loss: 0.063262 Acc: 0.9766
+Train Epoch: 9 [21760/35700] Loss: 0.079238 Acc: 0.9766
+Train Epoch: 9 [23040/35700] Loss: 0.013611 Acc: 1.0000
+Train Epoch: 9 [24320/35700] Loss: 0.050806 Acc: 0.9844
+Train Epoch: 9 [25600/35700] Loss: 0.044227 Acc: 0.9922
+Train Epoch: 9 [26880/35700] Loss: 0.051790 Acc: 0.9922
+Train Epoch: 9 [28160/35700] Loss: 0.030361 Acc: 0.9922
+Train Epoch: 9 [29440/35700] Loss: 0.026584 Acc: 1.0000
+Train Epoch: 9 [30720/35700] Loss: 0.041355 Acc: 0.9922
+Train Epoch: 9 [32000/35700] Loss: 0.038175 Acc: 0.9844
+Train Epoch: 9 [33280/35700] Loss: 0.027004 Acc: 0.9922
+Train Epoch: 9 [34560/35700] Loss: 0.048753 Acc: 0.9844
+	Test set: Average loss: 0.0571, Accuracy: 6196/6300 (98%)
+```
+
+In \[26\]:
+
+```python
+for epoch in range(20):
+        model.train()
+        for batch_idx, (data, target) in enumerate(train_loader):
+            indx_target = target.clone()
+            data, target = data.cuda(), target.cuda()
+            data, target = Variable(data), Variable(target)
+
+            optimizer.zero_grad()
+            output = model(data)
+#             output = nn.Softmax(output)
+#             loss = F.mse_loss(output, target)
+            loss=F.cross_entropy(output, target)
+            loss.backward()
+            optimizer.step()
+
+            if batch_idx % 10 ==0 and batch_idx > 0:
+                pred = output.data.max(1)[1]  # get the index of the max log-probability
+                correct = pred.cpu().eq(indx_target).sum()
+                acc = correct * 1.0 / len(data)
+                print('Train Epoch: {} [{}/{}] Loss: {:.6f} Acc: {:.4f}'.format(
+                    epoch, batch_idx * len(data), len(train_loader.dataset),
+                    loss, acc))
+
+        model.eval()
+        test_loss = 0
+        correct = 0
+        for data, target in test_loader:
+            indx_target = target.clone()
+            data, target = data.cuda(), target.cuda()
+            data, target = Variable(data, volatile=True), Variable(target)
+            output = model(data)
+            test_loss += F.cross_entropy(output, target)
+            pred = output.data.max(1)[1]
+            correct += pred.cpu().eq(indx_target).sum()
+
+        test_loss = test_loss / len(test_loader) 
+        acc = 100. * correct / float(len(test_loader.dataset))
+        print('\tTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)'.format(
+            test_loss, correct, len(test_loader.dataset), acc))
+        
+        if acc > best_acc:
+            new_file = os.path.join('./', 'best3-{}.pth'.format(epoch))
+            model_snapshot(model, new_file, old_file=old_file)
+            best_acc = acc
+            old_file = new_file
+```
+
+```text
+Train Epoch: 0 [1280/35700] Loss: 0.013202 Acc: 1.0000
+Train Epoch: 0 [2560/35700] Loss: 0.035058 Acc: 0.9922
+Train Epoch: 0 [3840/35700] Loss: 0.016134 Acc: 0.9922
+Train Epoch: 0 [5120/35700] Loss: 0.019590 Acc: 0.9922
+Train Epoch: 0 [6400/35700] Loss: 0.031274 Acc: 0.9922
+Train Epoch: 0 [7680/35700] Loss: 0.023607 Acc: 0.9922
+Train Epoch: 0 [8960/35700] Loss: 0.044469 Acc: 0.9844
+Train Epoch: 0 [10240/35700] Loss: 0.017271 Acc: 1.0000
+Train Epoch: 0 [11520/35700] Loss: 0.005256 Acc: 1.0000
+Train Epoch: 0 [12800/35700] Loss: 0.010144 Acc: 1.0000
+Train Epoch: 0 [14080/35700] Loss: 0.036877 Acc: 0.9844
+Train Epoch: 0 [15360/35700] Loss: 0.034577 Acc: 0.9766
+Train Epoch: 0 [16640/35700] Loss: 0.024325 Acc: 0.9922
+Train Epoch: 0 [17920/35700] Loss: 0.004251 Acc: 1.0000
+Train Epoch: 0 [19200/35700] Loss: 0.016439 Acc: 1.0000
+Train Epoch: 0 [20480/35700] Loss: 0.013770 Acc: 0.9922
+Train Epoch: 0 [21760/35700] Loss: 0.052215 Acc: 0.9922
+Train Epoch: 0 [23040/35700] Loss: 0.022394 Acc: 0.9922
+Train Epoch: 0 [24320/35700] Loss: 0.030750 Acc: 0.9922
+Train Epoch: 0 [25600/35700] Loss: 0.011162 Acc: 1.0000
+Train Epoch: 0 [26880/35700] Loss: 0.013450 Acc: 1.0000
+Train Epoch: 0 [28160/35700] Loss: 0.031824 Acc: 0.9922
+Train Epoch: 0 [29440/35700] Loss: 0.010608 Acc: 1.0000
+Train Epoch: 0 [30720/35700] Loss: 0.005728 Acc: 1.0000
+Train Epoch: 0 [32000/35700] Loss: 0.011517 Acc: 0.9922
+Train Epoch: 0 [33280/35700] Loss: 0.084068 Acc: 0.9688
+Train Epoch: 0 [34560/35700] Loss: 0.003580 Acc: 1.0000
+```
+
+```text
+C:\Users\fdal\AppData\Roaming\Python\Python37\site-packages\ipykernel_launcher.py:30: UserWarning: volatile was removed and now has no effect. Use `with torch.no_grad():` instead.
+```
+
+```text
+	Test set: Average loss: 0.0464, Accuracy: 6219/6300 (99%)
+Train Epoch: 1 [1280/35700] Loss: 0.009305 Acc: 1.0000
+Train Epoch: 1 [2560/35700] Loss: 0.006396 Acc: 1.0000
+Train Epoch: 1 [3840/35700] Loss: 0.015711 Acc: 1.0000
+Train Epoch: 1 [5120/35700] Loss: 0.013309 Acc: 0.9922
+Train Epoch: 1 [6400/35700] Loss: 0.029237 Acc: 0.9844
+Train Epoch: 1 [7680/35700] Loss: 0.002397 Acc: 1.0000
+Train Epoch: 1 [8960/35700] Loss: 0.019866 Acc: 0.9922
+Train Epoch: 1 [10240/35700] Loss: 0.009061 Acc: 1.0000
+Train Epoch: 1 [11520/35700] Loss: 0.019840 Acc: 0.9922
+Train Epoch: 1 [12800/35700] Loss: 0.010205 Acc: 1.0000
+Train Epoch: 1 [14080/35700] Loss: 0.011645 Acc: 1.0000
+Train Epoch: 1 [15360/35700] Loss: 0.023589 Acc: 0.9844
+Train Epoch: 1 [16640/35700] Loss: 0.024232 Acc: 0.9922
+Train Epoch: 1 [17920/35700] Loss: 0.016581 Acc: 1.0000
+Train Epoch: 1 [19200/35700] Loss: 0.006078 Acc: 1.0000
+Train Epoch: 1 [20480/35700] Loss: 0.044236 Acc: 0.9922
+Train Epoch: 1 [21760/35700] Loss: 0.008707 Acc: 1.0000
+Train Epoch: 1 [23040/35700] Loss: 0.007006 Acc: 1.0000
+Train Epoch: 1 [24320/35700] Loss: 0.025175 Acc: 0.9922
+Train Epoch: 1 [25600/35700] Loss: 0.064440 Acc: 0.9766
+Train Epoch: 1 [26880/35700] Loss: 0.021496 Acc: 0.9922
+Train Epoch: 1 [28160/35700] Loss: 0.034781 Acc: 0.9844
+Train Epoch: 1 [29440/35700] Loss: 0.016579 Acc: 0.9922
+Train Epoch: 1 [30720/35700] Loss: 0.006631 Acc: 1.0000
+Train Epoch: 1 [32000/35700] Loss: 0.022896 Acc: 0.9922
+Train Epoch: 1 [33280/35700] Loss: 0.011417 Acc: 1.0000
+Train Epoch: 1 [34560/35700] Loss: 0.034972 Acc: 0.9922
+	Test set: Average loss: 0.0443, Accuracy: 6216/6300 (99%)
+Train Epoch: 2 [1280/35700] Loss: 0.009516 Acc: 1.0000
+Train Epoch: 2 [2560/35700] Loss: 0.007159 Acc: 1.0000
+Train Epoch: 2 [3840/35700] Loss: 0.030791 Acc: 0.9922
+Train Epoch: 2 [5120/35700] Loss: 0.031196 Acc: 0.9922
+Train Epoch: 2 [6400/35700] Loss: 0.012555 Acc: 1.0000
+Train Epoch: 2 [7680/35700] Loss: 0.019455 Acc: 0.9922
+Train Epoch: 2 [8960/35700] Loss: 0.008547 Acc: 1.0000
+Train Epoch: 2 [10240/35700] Loss: 0.017482 Acc: 1.0000
+Train Epoch: 2 [11520/35700] Loss: 0.013350 Acc: 1.0000
+Train Epoch: 2 [12800/35700] Loss: 0.010488 Acc: 0.9922
+Train Epoch: 2 [14080/35700] Loss: 0.006211 Acc: 1.0000
+Train Epoch: 2 [15360/35700] Loss: 0.007948 Acc: 1.0000
+Train Epoch: 2 [16640/35700] Loss: 0.005964 Acc: 1.0000
+Train Epoch: 2 [17920/35700] Loss: 0.008013 Acc: 1.0000
+Train Epoch: 2 [19200/35700] Loss: 0.015748 Acc: 1.0000
+Train Epoch: 2 [20480/35700] Loss: 0.007231 Acc: 1.0000
+Train Epoch: 2 [21760/35700] Loss: 0.009483 Acc: 1.0000
+Train Epoch: 2 [23040/35700] Loss: 0.008259 Acc: 1.0000
+Train Epoch: 2 [24320/35700] Loss: 0.017615 Acc: 0.9922
+Train Epoch: 2 [25600/35700] Loss: 0.004169 Acc: 1.0000
+Train Epoch: 2 [26880/35700] Loss: 0.004750 Acc: 1.0000
+Train Epoch: 2 [28160/35700] Loss: 0.023091 Acc: 0.9922
+Train Epoch: 2 [29440/35700] Loss: 0.007538 Acc: 1.0000
+Train Epoch: 2 [30720/35700] Loss: 0.014542 Acc: 0.9922
+Train Epoch: 2 [32000/35700] Loss: 0.014022 Acc: 1.0000
+Train Epoch: 2 [33280/35700] Loss: 0.023046 Acc: 0.9922
+Train Epoch: 2 [34560/35700] Loss: 0.004187 Acc: 1.0000
+	Test set: Average loss: 0.0430, Accuracy: 6219/6300 (99%)
+Train Epoch: 3 [1280/35700] Loss: 0.008820 Acc: 1.0000
+Train Epoch: 3 [2560/35700] Loss: 0.017997 Acc: 0.9844
+Train Epoch: 3 [3840/35700] Loss: 0.004952 Acc: 1.0000
+Train Epoch: 3 [5120/35700] Loss: 0.006584 Acc: 1.0000
+Train Epoch: 3 [6400/35700] Loss: 0.007387 Acc: 1.0000
+Train Epoch: 3 [7680/35700] Loss: 0.013915 Acc: 0.9922
+Train Epoch: 3 [8960/35700] Loss: 0.005955 Acc: 1.0000
+Train Epoch: 3 [10240/35700] Loss: 0.011371 Acc: 0.9922
+Train Epoch: 3 [11520/35700] Loss: 0.017638 Acc: 1.0000
+Train Epoch: 3 [12800/35700] Loss: 0.012967 Acc: 1.0000
+Train Epoch: 3 [14080/35700] Loss: 0.009479 Acc: 1.0000
+Train Epoch: 3 [15360/35700] Loss: 0.038858 Acc: 0.9844
+Train Epoch: 3 [16640/35700] Loss: 0.028353 Acc: 0.9922
+Train Epoch: 3 [17920/35700] Loss: 0.011924 Acc: 1.0000
+Train Epoch: 3 [19200/35700] Loss: 0.069226 Acc: 0.9922
+Train Epoch: 3 [20480/35700] Loss: 0.005569 Acc: 1.0000
+Train Epoch: 3 [21760/35700] Loss: 0.026231 Acc: 0.9922
+Train Epoch: 3 [23040/35700] Loss: 0.004102 Acc: 1.0000
+Train Epoch: 3 [24320/35700] Loss: 0.023952 Acc: 0.9844
+Train Epoch: 3 [25600/35700] Loss: 0.010581 Acc: 0.9922
+Train Epoch: 3 [26880/35700] Loss: 0.020030 Acc: 1.0000
+Train Epoch: 3 [28160/35700] Loss: 0.004704 Acc: 1.0000
+Train Epoch: 3 [29440/35700] Loss: 0.011347 Acc: 1.0000
+Train Epoch: 3 [30720/35700] Loss: 0.016980 Acc: 0.9922
+Train Epoch: 3 [32000/35700] Loss: 0.023742 Acc: 0.9922
+Train Epoch: 3 [33280/35700] Loss: 0.007925 Acc: 1.0000
+Train Epoch: 3 [34560/35700] Loss: 0.009212 Acc: 1.0000
+	Test set: Average loss: 0.0427, Accuracy: 6219/6300 (99%)
+Train Epoch: 4 [1280/35700] Loss: 0.035886 Acc: 0.9922
+Train Epoch: 4 [2560/35700] Loss: 0.012759 Acc: 0.9922
+Train Epoch: 4 [3840/35700] Loss: 0.036438 Acc: 0.9844
+Train Epoch: 4 [5120/35700] Loss: 0.038623 Acc: 0.9922
+Train Epoch: 4 [6400/35700] Loss: 0.010482 Acc: 1.0000
+Train Epoch: 4 [7680/35700] Loss: 0.021846 Acc: 0.9922
+Train Epoch: 4 [8960/35700] Loss: 0.028123 Acc: 0.9922
+Train Epoch: 4 [10240/35700] Loss: 0.014700 Acc: 0.9922
+Train Epoch: 4 [11520/35700] Loss: 0.026616 Acc: 0.9844
+Train Epoch: 4 [12800/35700] Loss: 0.008905 Acc: 1.0000
+Train Epoch: 4 [14080/35700] Loss: 0.008277 Acc: 1.0000
+Train Epoch: 4 [15360/35700] Loss: 0.002342 Acc: 1.0000
+Train Epoch: 4 [16640/35700] Loss: 0.008275 Acc: 1.0000
+Train Epoch: 4 [17920/35700] Loss: 0.026588 Acc: 0.9922
+Train Epoch: 4 [19200/35700] Loss: 0.006746 Acc: 1.0000
+Train Epoch: 4 [20480/35700] Loss: 0.007028 Acc: 1.0000
+Train Epoch: 4 [21760/35700] Loss: 0.015665 Acc: 0.9922
+Train Epoch: 4 [23040/35700] Loss: 0.006424 Acc: 1.0000
+Train Epoch: 4 [24320/35700] Loss: 0.054075 Acc: 0.9766
+Train Epoch: 4 [25600/35700] Loss: 0.005193 Acc: 1.0000
+Train Epoch: 4 [26880/35700] Loss: 0.062325 Acc: 0.9922
+Train Epoch: 4 [28160/35700] Loss: 0.022573 Acc: 0.9922
+Train Epoch: 4 [29440/35700] Loss: 0.011764 Acc: 1.0000
+Train Epoch: 4 [30720/35700] Loss: 0.015704 Acc: 1.0000
+Train Epoch: 4 [32000/35700] Loss: 0.020207 Acc: 0.9922
+Train Epoch: 4 [33280/35700] Loss: 0.012568 Acc: 1.0000
+Train Epoch: 4 [34560/35700] Loss: 0.024828 Acc: 0.9922
+	Test set: Average loss: 0.0418, Accuracy: 6221/6300 (99%)
+Removing old model C:\Users\fdal\Desktop\bigs\TOBIGS\best2-6.pth
+Saving model to C:\Users\fdal\Desktop\bigs\TOBIGS\best3-4.pth
+Train Epoch: 5 [1280/35700] Loss: 0.011650 Acc: 1.0000
+Train Epoch: 5 [2560/35700] Loss: 0.009133 Acc: 1.0000
+Train Epoch: 5 [3840/35700] Loss: 0.018598 Acc: 1.0000
+Train Epoch: 5 [5120/35700] Loss: 0.005362 Acc: 1.0000
+Train Epoch: 5 [6400/35700] Loss: 0.008241 Acc: 1.0000
+Train Epoch: 5 [7680/35700] Loss: 0.017903 Acc: 0.9922
+Train Epoch: 5 [8960/35700] Loss: 0.011286 Acc: 1.0000
+Train Epoch: 5 [10240/35700] Loss: 0.008469 Acc: 1.0000
+Train Epoch: 5 [11520/35700] Loss: 0.019498 Acc: 0.9922
+Train Epoch: 5 [12800/35700] Loss: 0.006249 Acc: 1.0000
+Train Epoch: 5 [14080/35700] Loss: 0.006228 Acc: 1.0000
+Train Epoch: 5 [15360/35700] Loss: 0.005957 Acc: 1.0000
+Train Epoch: 5 [16640/35700] Loss: 0.004423 Acc: 1.0000
+Train Epoch: 5 [17920/35700] Loss: 0.031700 Acc: 0.9922
+Train Epoch: 5 [19200/35700] Loss: 0.035711 Acc: 0.9844
+Train Epoch: 5 [20480/35700] Loss: 0.012989 Acc: 0.9922
+Train Epoch: 5 [21760/35700] Loss: 0.021291 Acc: 0.9922
+Train Epoch: 5 [23040/35700] Loss: 0.004027 Acc: 1.0000
+Train Epoch: 5 [24320/35700] Loss: 0.006233 Acc: 1.0000
+Train Epoch: 5 [25600/35700] Loss: 0.002967 Acc: 1.0000
+Train Epoch: 5 [26880/35700] Loss: 0.021698 Acc: 0.9922
+Train Epoch: 5 [28160/35700] Loss: 0.002278 Acc: 1.0000
+Train Epoch: 5 [29440/35700] Loss: 0.006399 Acc: 1.0000
+Train Epoch: 5 [30720/35700] Loss: 0.004925 Acc: 1.0000
+Train Epoch: 5 [32000/35700] Loss: 0.005414 Acc: 1.0000
+Train Epoch: 5 [33280/35700] Loss: 0.011833 Acc: 1.0000
+Train Epoch: 5 [34560/35700] Loss: 0.009437 Acc: 1.0000
+	Test set: Average loss: 0.0431, Accuracy: 6221/6300 (99%)
+Train Epoch: 6 [1280/35700] Loss: 0.009289 Acc: 0.9922
+Train Epoch: 6 [2560/35700] Loss: 0.013428 Acc: 1.0000
+Train Epoch: 6 [3840/35700] Loss: 0.002936 Acc: 1.0000
+Train Epoch: 6 [5120/35700] Loss: 0.004726 Acc: 1.0000
+Train Epoch: 6 [6400/35700] Loss: 0.008076 Acc: 1.0000
+Train Epoch: 6 [7680/35700] Loss: 0.007146 Acc: 1.0000
+Train Epoch: 6 [8960/35700] Loss: 0.024096 Acc: 0.9922
+Train Epoch: 6 [10240/35700] Loss: 0.010962 Acc: 1.0000
+Train Epoch: 6 [11520/35700] Loss: 0.007814 Acc: 1.0000
+Train Epoch: 6 [12800/35700] Loss: 0.022170 Acc: 0.9922
+Train Epoch: 6 [14080/35700] Loss: 0.023966 Acc: 0.9922
+Train Epoch: 6 [15360/35700] Loss: 0.004396 Acc: 1.0000
+Train Epoch: 6 [16640/35700] Loss: 0.007671 Acc: 1.0000
+Train Epoch: 6 [17920/35700] Loss: 0.019449 Acc: 0.9922
+Train Epoch: 6 [19200/35700] Loss: 0.027812 Acc: 0.9922
+Train Epoch: 6 [20480/35700] Loss: 0.022467 Acc: 0.9922
+Train Epoch: 6 [21760/35700] Loss: 0.020296 Acc: 0.9922
+Train Epoch: 6 [23040/35700] Loss: 0.008572 Acc: 1.0000
+Train Epoch: 6 [24320/35700] Loss: 0.015058 Acc: 1.0000
+Train Epoch: 6 [25600/35700] Loss: 0.002481 Acc: 1.0000
+Train Epoch: 6 [26880/35700] Loss: 0.008563 Acc: 1.0000
+Train Epoch: 6 [28160/35700] Loss: 0.011974 Acc: 1.0000
+Train Epoch: 6 [29440/35700] Loss: 0.012750 Acc: 0.9922
+Train Epoch: 6 [30720/35700] Loss: 0.012436 Acc: 0.9922
+Train Epoch: 6 [32000/35700] Loss: 0.008215 Acc: 1.0000
+Train Epoch: 6 [33280/35700] Loss: 0.014430 Acc: 0.9922
+Train Epoch: 6 [34560/35700] Loss: 0.009810 Acc: 1.0000
+	Test set: Average loss: 0.0462, Accuracy: 6217/6300 (99%)
+Train Epoch: 7 [1280/35700] Loss: 0.003018 Acc: 1.0000
+Train Epoch: 7 [2560/35700] Loss: 0.010746 Acc: 1.0000
+Train Epoch: 7 [3840/35700] Loss: 0.016586 Acc: 0.9922
+Train Epoch: 7 [5120/35700] Loss: 0.004625 Acc: 1.0000
+Train Epoch: 7 [6400/35700] Loss: 0.037193 Acc: 0.9766
+Train Epoch: 7 [7680/35700] Loss: 0.017654 Acc: 1.0000
+Train Epoch: 7 [8960/35700] Loss: 0.007546 Acc: 1.0000
+Train Epoch: 7 [10240/35700] Loss: 0.007095 Acc: 1.0000
+Train Epoch: 7 [11520/35700] Loss: 0.008016 Acc: 1.0000
+Train Epoch: 7 [12800/35700] Loss: 0.008327 Acc: 1.0000
+Train Epoch: 7 [14080/35700] Loss: 0.017331 Acc: 0.9922
+Train Epoch: 7 [15360/35700] Loss: 0.047082 Acc: 0.9922
+Train Epoch: 7 [16640/35700] Loss: 0.035762 Acc: 0.9844
+Train Epoch: 7 [17920/35700] Loss: 0.003030 Acc: 1.0000
+Train Epoch: 7 [19200/35700] Loss: 0.016038 Acc: 0.9922
+Train Epoch: 7 [20480/35700] Loss: 0.016200 Acc: 0.9922
+Train Epoch: 7 [21760/35700] Loss: 0.007151 Acc: 1.0000
+Train Epoch: 7 [23040/35700] Loss: 0.032901 Acc: 0.9922
+Train Epoch: 7 [24320/35700] Loss: 0.011071 Acc: 1.0000
+Train Epoch: 7 [25600/35700] Loss: 0.002036 Acc: 1.0000
+Train Epoch: 7 [26880/35700] Loss: 0.011260 Acc: 1.0000
+Train Epoch: 7 [28160/35700] Loss: 0.008163 Acc: 1.0000
+Train Epoch: 7 [29440/35700] Loss: 0.008470 Acc: 1.0000
+Train Epoch: 7 [30720/35700] Loss: 0.017386 Acc: 0.9922
+Train Epoch: 7 [32000/35700] Loss: 0.006222 Acc: 1.0000
+Train Epoch: 7 [33280/35700] Loss: 0.006380 Acc: 1.0000
+Train Epoch: 7 [34560/35700] Loss: 0.004300 Acc: 1.0000
+	Test set: Average loss: 0.0427, Accuracy: 6220/6300 (99%)
+Train Epoch: 8 [1280/35700] Loss: 0.008467 Acc: 1.0000
+Train Epoch: 8 [2560/35700] Loss: 0.005103 Acc: 1.0000
+Train Epoch: 8 [3840/35700] Loss: 0.005993 Acc: 1.0000
+Train Epoch: 8 [5120/35700] Loss: 0.001480 Acc: 1.0000
+Train Epoch: 8 [6400/35700] Loss: 0.024817 Acc: 0.9844
+Train Epoch: 8 [7680/35700] Loss: 0.004815 Acc: 1.0000
+Train Epoch: 8 [8960/35700] Loss: 0.008851 Acc: 1.0000
+Train Epoch: 8 [10240/35700] Loss: 0.005326 Acc: 1.0000
+Train Epoch: 8 [11520/35700] Loss: 0.004189 Acc: 1.0000
+Train Epoch: 8 [12800/35700] Loss: 0.006187 Acc: 1.0000
+Train Epoch: 8 [14080/35700] Loss: 0.014733 Acc: 0.9922
+Train Epoch: 8 [15360/35700] Loss: 0.002868 Acc: 1.0000
+Train Epoch: 8 [16640/35700] Loss: 0.007236 Acc: 1.0000
+Train Epoch: 8 [17920/35700] Loss: 0.012902 Acc: 0.9922
+Train Epoch: 8 [19200/35700] Loss: 0.018841 Acc: 0.9922
+Train Epoch: 8 [20480/35700] Loss: 0.003976 Acc: 1.0000
+Train Epoch: 8 [21760/35700] Loss: 0.003770 Acc: 1.0000
+Train Epoch: 8 [23040/35700] Loss: 0.012485 Acc: 1.0000
+Train Epoch: 8 [24320/35700] Loss: 0.003855 Acc: 1.0000
+Train Epoch: 8 [25600/35700] Loss: 0.002653 Acc: 1.0000
+Train Epoch: 8 [26880/35700] Loss: 0.000928 Acc: 1.0000
+Train Epoch: 8 [28160/35700] Loss: 0.003571 Acc: 1.0000
+Train Epoch: 8 [29440/35700] Loss: 0.017915 Acc: 0.9922
+Train Epoch: 8 [30720/35700] Loss: 0.056970 Acc: 0.9844
+Train Epoch: 8 [32000/35700] Loss: 0.005461 Acc: 1.0000
+Train Epoch: 8 [33280/35700] Loss: 0.008628 Acc: 1.0000
+Train Epoch: 8 [34560/35700] Loss: 0.025012 Acc: 0.9922
+	Test set: Average loss: 0.0422, Accuracy: 6223/6300 (99%)
+Removing old model C:\Users\fdal\Desktop\bigs\TOBIGS\best3-4.pth
+Saving model to C:\Users\fdal\Desktop\bigs\TOBIGS\best3-8.pth
+Train Epoch: 9 [1280/35700] Loss: 0.003322 Acc: 1.0000
+Train Epoch: 9 [2560/35700] Loss: 0.009895 Acc: 1.0000
+Train Epoch: 9 [3840/35700] Loss: 0.008245 Acc: 1.0000
+Train Epoch: 9 [5120/35700] Loss: 0.002083 Acc: 1.0000
+Train Epoch: 9 [6400/35700] Loss: 0.001608 Acc: 1.0000
+Train Epoch: 9 [7680/35700] Loss: 0.054758 Acc: 0.9844
+Train Epoch: 9 [8960/35700] Loss: 0.010248 Acc: 1.0000
+Train Epoch: 9 [10240/35700] Loss: 0.003344 Acc: 1.0000
+Train Epoch: 9 [11520/35700] Loss: 0.006116 Acc: 1.0000
+Train Epoch: 9 [12800/35700] Loss: 0.022682 Acc: 0.9922
+Train Epoch: 9 [14080/35700] Loss: 0.005221 Acc: 1.0000
+Train Epoch: 9 [15360/35700] Loss: 0.007984 Acc: 1.0000
+Train Epoch: 9 [16640/35700] Loss: 0.003598 Acc: 1.0000
+Train Epoch: 9 [17920/35700] Loss: 0.013012 Acc: 0.9922
+Train Epoch: 9 [19200/35700] Loss: 0.005511 Acc: 1.0000
+Train Epoch: 9 [20480/35700] Loss: 0.012429 Acc: 0.9922
+Train Epoch: 9 [21760/35700] Loss: 0.009021 Acc: 1.0000
+Train Epoch: 9 [23040/35700] Loss: 0.009216 Acc: 0.9922
+Train Epoch: 9 [24320/35700] Loss: 0.012027 Acc: 1.0000
+Train Epoch: 9 [25600/35700] Loss: 0.002994 Acc: 1.0000
+Train Epoch: 9 [26880/35700] Loss: 0.009445 Acc: 0.9922
+Train Epoch: 9 [28160/35700] Loss: 0.002139 Acc: 1.0000
+Train Epoch: 9 [29440/35700] Loss: 0.008209 Acc: 1.0000
+Train Epoch: 9 [30720/35700] Loss: 0.005280 Acc: 1.0000
+Train Epoch: 9 [32000/35700] Loss: 0.014982 Acc: 1.0000
+Train Epoch: 9 [33280/35700] Loss: 0.002861 Acc: 1.0000
+Train Epoch: 9 [34560/35700] Loss: 0.003033 Acc: 1.0000
+	Test set: Average loss: 0.0431, Accuracy: 6227/6300 (99%)
+Removing old model C:\Users\fdal\Desktop\bigs\TOBIGS\best3-8.pth
+Saving model to C:\Users\fdal\Desktop\bigs\TOBIGS\best3-9.pth
+Train Epoch: 10 [1280/35700] Loss: 0.017470 Acc: 0.9922
+Train Epoch: 10 [2560/35700] Loss: 0.017560 Acc: 0.9922
+Train Epoch: 10 [3840/35700] Loss: 0.011589 Acc: 0.9922
+Train Epoch: 10 [5120/35700] Loss: 0.002857 Acc: 1.0000
+Train Epoch: 10 [6400/35700] Loss: 0.015193 Acc: 0.9922
+Train Epoch: 10 [7680/35700] Loss: 0.006690 Acc: 1.0000
+Train Epoch: 10 [8960/35700] Loss: 0.002047 Acc: 1.0000
+Train Epoch: 10 [10240/35700] Loss: 0.034358 Acc: 0.9922
+Train Epoch: 10 [11520/35700] Loss: 0.007165 Acc: 1.0000
+Train Epoch: 10 [12800/35700] Loss: 0.016807 Acc: 0.9922
+Train Epoch: 10 [14080/35700] Loss: 0.017167 Acc: 0.9922
+Train Epoch: 10 [15360/35700] Loss: 0.016933 Acc: 0.9922
+Train Epoch: 10 [16640/35700] Loss: 0.007813 Acc: 1.0000
+Train Epoch: 10 [17920/35700] Loss: 0.006973 Acc: 0.9922
+Train Epoch: 10 [19200/35700] Loss: 0.004593 Acc: 1.0000
+Train Epoch: 10 [20480/35700] Loss: 0.003551 Acc: 1.0000
+Train Epoch: 10 [21760/35700] Loss: 0.005891 Acc: 1.0000
+Train Epoch: 10 [23040/35700] Loss: 0.021361 Acc: 0.9844
+Train Epoch: 10 [24320/35700] Loss: 0.001931 Acc: 1.0000
+Train Epoch: 10 [25600/35700] Loss: 0.005889 Acc: 1.0000
+Train Epoch: 10 [26880/35700] Loss: 0.006793 Acc: 1.0000
+Train Epoch: 10 [28160/35700] Loss: 0.031389 Acc: 0.9844
+Train Epoch: 10 [29440/35700] Loss: 0.012116 Acc: 1.0000
+Train Epoch: 10 [30720/35700] Loss: 0.002237 Acc: 1.0000
+Train Epoch: 10 [32000/35700] Loss: 0.014451 Acc: 0.9922
+Train Epoch: 10 [33280/35700] Loss: 0.007634 Acc: 1.0000
+Train Epoch: 10 [34560/35700] Loss: 0.002307 Acc: 1.0000
+	Test set: Average loss: 0.0424, Accuracy: 6223/6300 (99%)
+Train Epoch: 11 [1280/35700] Loss: 0.004920 Acc: 1.0000
+Train Epoch: 11 [2560/35700] Loss: 0.003419 Acc: 1.0000
+Train Epoch: 11 [3840/35700] Loss: 0.004221 Acc: 1.0000
+Train Epoch: 11 [5120/35700] Loss: 0.010100 Acc: 1.0000
+Train Epoch: 11 [6400/35700] Loss: 0.005573 Acc: 1.0000
+Train Epoch: 11 [7680/35700] Loss: 0.002817 Acc: 1.0000
+Train Epoch: 11 [8960/35700] Loss: 0.012794 Acc: 1.0000
+Train Epoch: 11 [10240/35700] Loss: 0.008896 Acc: 1.0000
+Train Epoch: 11 [11520/35700] Loss: 0.009799 Acc: 1.0000
+Train Epoch: 11 [12800/35700] Loss: 0.021937 Acc: 0.9922
+Train Epoch: 11 [14080/35700] Loss: 0.056562 Acc: 0.9922
+Train Epoch: 11 [15360/35700] Loss: 0.006776 Acc: 1.0000
+Train Epoch: 11 [16640/35700] Loss: 0.004502 Acc: 1.0000
+Train Epoch: 11 [17920/35700] Loss: 0.002006 Acc: 1.0000
+Train Epoch: 11 [19200/35700] Loss: 0.007799 Acc: 1.0000
+Train Epoch: 11 [20480/35700] Loss: 0.004900 Acc: 1.0000
+Train Epoch: 11 [21760/35700] Loss: 0.017317 Acc: 0.9922
+Train Epoch: 11 [23040/35700] Loss: 0.006592 Acc: 1.0000
+Train Epoch: 11 [24320/35700] Loss: 0.003974 Acc: 1.0000
+Train Epoch: 11 [25600/35700] Loss: 0.003421 Acc: 1.0000
+Train Epoch: 11 [26880/35700] Loss: 0.007707 Acc: 1.0000
+Train Epoch: 11 [28160/35700] Loss: 0.002051 Acc: 1.0000
+Train Epoch: 11 [29440/35700] Loss: 0.005310 Acc: 1.0000
+Train Epoch: 11 [30720/35700] Loss: 0.002955 Acc: 1.0000
+Train Epoch: 11 [32000/35700] Loss: 0.017348 Acc: 1.0000
+Train Epoch: 11 [33280/35700] Loss: 0.012491 Acc: 1.0000
+Train Epoch: 11 [34560/35700] Loss: 0.001804 Acc: 1.0000
+	Test set: Average loss: 0.0413, Accuracy: 6227/6300 (99%)
+Train Epoch: 12 [1280/35700] Loss: 0.004928 Acc: 1.0000
+Train Epoch: 12 [2560/35700] Loss: 0.002775 Acc: 1.0000
+Train Epoch: 12 [3840/35700] Loss: 0.003240 Acc: 1.0000
+Train Epoch: 12 [5120/35700] Loss: 0.004136 Acc: 1.0000
+Train Epoch: 12 [6400/35700] Loss: 0.013640 Acc: 0.9922
+Train Epoch: 12 [7680/35700] Loss: 0.019670 Acc: 0.9922
+Train Epoch: 12 [8960/35700] Loss: 0.002057 Acc: 1.0000
+Train Epoch: 12 [10240/35700] Loss: 0.012085 Acc: 0.9922
+Train Epoch: 12 [11520/35700] Loss: 0.001419 Acc: 1.0000
+Train Epoch: 12 [12800/35700] Loss: 0.019547 Acc: 0.9922
+Train Epoch: 12 [14080/35700] Loss: 0.001661 Acc: 1.0000
+Train Epoch: 12 [15360/35700] Loss: 0.004485 Acc: 1.0000
+Train Epoch: 12 [16640/35700] Loss: 0.011999 Acc: 1.0000
+Train Epoch: 12 [17920/35700] Loss: 0.017298 Acc: 1.0000
+Train Epoch: 12 [19200/35700] Loss: 0.004204 Acc: 1.0000
+Train Epoch: 12 [20480/35700] Loss: 0.002776 Acc: 1.0000
+Train Epoch: 12 [21760/35700] Loss: 0.009779 Acc: 1.0000
+Train Epoch: 12 [23040/35700] Loss: 0.001933 Acc: 1.0000
+Train Epoch: 12 [24320/35700] Loss: 0.003767 Acc: 1.0000
+Train Epoch: 12 [25600/35700] Loss: 0.003536 Acc: 1.0000
+Train Epoch: 12 [26880/35700] Loss: 0.009879 Acc: 1.0000
+Train Epoch: 12 [28160/35700] Loss: 0.004013 Acc: 1.0000
+Train Epoch: 12 [29440/35700] Loss: 0.006554 Acc: 1.0000
+Train Epoch: 12 [30720/35700] Loss: 0.006121 Acc: 1.0000
+Train Epoch: 12 [32000/35700] Loss: 0.012384 Acc: 1.0000
+Train Epoch: 12 [33280/35700] Loss: 0.011921 Acc: 1.0000
+Train Epoch: 12 [34560/35700] Loss: 0.007056 Acc: 1.0000
+	Test set: Average loss: 0.0445, Accuracy: 6223/6300 (99%)
+Train Epoch: 13 [1280/35700] Loss: 0.008034 Acc: 1.0000
+Train Epoch: 13 [2560/35700] Loss: 0.004946 Acc: 1.0000
+Train Epoch: 13 [3840/35700] Loss: 0.001673 Acc: 1.0000
+Train Epoch: 13 [5120/35700] Loss: 0.012521 Acc: 0.9922
+Train Epoch: 13 [6400/35700] Loss: 0.002857 Acc: 1.0000
+Train Epoch: 13 [7680/35700] Loss: 0.012198 Acc: 1.0000
+Train Epoch: 13 [8960/35700] Loss: 0.004196 Acc: 1.0000
+Train Epoch: 13 [10240/35700] Loss: 0.002735 Acc: 1.0000
+Train Epoch: 13 [11520/35700] Loss: 0.003326 Acc: 1.0000
+Train Epoch: 13 [12800/35700] Loss: 0.010312 Acc: 0.9922
+Train Epoch: 13 [14080/35700] Loss: 0.006750 Acc: 1.0000
+Train Epoch: 13 [15360/35700] Loss: 0.006232 Acc: 1.0000
+Train Epoch: 13 [16640/35700] Loss: 0.005188 Acc: 1.0000
+Train Epoch: 13 [17920/35700] Loss: 0.020822 Acc: 0.9922
+Train Epoch: 13 [19200/35700] Loss: 0.016199 Acc: 0.9922
+Train Epoch: 13 [20480/35700] Loss: 0.006863 Acc: 1.0000
+Train Epoch: 13 [21760/35700] Loss: 0.012340 Acc: 1.0000
+Train Epoch: 13 [23040/35700] Loss: 0.009106 Acc: 1.0000
+Train Epoch: 13 [24320/35700] Loss: 0.004139 Acc: 1.0000
+Train Epoch: 13 [25600/35700] Loss: 0.007589 Acc: 1.0000
+Train Epoch: 13 [26880/35700] Loss: 0.007579 Acc: 1.0000
+Train Epoch: 13 [28160/35700] Loss: 0.004560 Acc: 1.0000
+Train Epoch: 13 [29440/35700] Loss: 0.003241 Acc: 1.0000
+Train Epoch: 13 [30720/35700] Loss: 0.004317 Acc: 1.0000
+Train Epoch: 13 [32000/35700] Loss: 0.005737 Acc: 1.0000
+Train Epoch: 13 [33280/35700] Loss: 0.016061 Acc: 0.9922
+Train Epoch: 13 [34560/35700] Loss: 0.005308 Acc: 1.0000
+	Test set: Average loss: 0.0430, Accuracy: 6221/6300 (99%)
+Train Epoch: 14 [1280/35700] Loss: 0.002092 Acc: 1.0000
+Train Epoch: 14 [2560/35700] Loss: 0.044174 Acc: 0.9922
+Train Epoch: 14 [3840/35700] Loss: 0.004120 Acc: 1.0000
+Train Epoch: 14 [5120/35700] Loss: 0.001705 Acc: 1.0000
+Train Epoch: 14 [6400/35700] Loss: 0.002672 Acc: 1.0000
+Train Epoch: 14 [7680/35700] Loss: 0.004471 Acc: 1.0000
+Train Epoch: 14 [8960/35700] Loss: 0.019397 Acc: 0.9922
+Train Epoch: 14 [10240/35700] Loss: 0.004031 Acc: 1.0000
+Train Epoch: 14 [11520/35700] Loss: 0.005813 Acc: 1.0000
+Train Epoch: 14 [12800/35700] Loss: 0.011444 Acc: 0.9922
+Train Epoch: 14 [14080/35700] Loss: 0.008241 Acc: 1.0000
+Train Epoch: 14 [15360/35700] Loss: 0.001865 Acc: 1.0000
+Train Epoch: 14 [16640/35700] Loss: 0.012449 Acc: 0.9922
+Train Epoch: 14 [17920/35700] Loss: 0.015591 Acc: 0.9922
+Train Epoch: 14 [19200/35700] Loss: 0.003096 Acc: 1.0000
+Train Epoch: 14 [20480/35700] Loss: 0.015007 Acc: 0.9922
+Train Epoch: 14 [21760/35700] Loss: 0.010000 Acc: 1.0000
+Train Epoch: 14 [23040/35700] Loss: 0.003928 Acc: 1.0000
+Train Epoch: 14 [24320/35700] Loss: 0.003704 Acc: 1.0000
+Train Epoch: 14 [25600/35700] Loss: 0.011083 Acc: 0.9922
+Train Epoch: 14 [26880/35700] Loss: 0.019151 Acc: 0.9922
+Train Epoch: 14 [28160/35700] Loss: 0.003427 Acc: 1.0000
+Train Epoch: 14 [29440/35700] Loss: 0.006580 Acc: 1.0000
+Train Epoch: 14 [30720/35700] Loss: 0.002412 Acc: 1.0000
+Train Epoch: 14 [32000/35700] Loss: 0.014303 Acc: 0.9922
+Train Epoch: 14 [33280/35700] Loss: 0.001399 Acc: 1.0000
+Train Epoch: 14 [34560/35700] Loss: 0.001404 Acc: 1.0000
+	Test set: Average loss: 0.0416, Accuracy: 6229/6300 (99%)
+Removing old model C:\Users\fdal\Desktop\bigs\TOBIGS\best3-9.pth
+Saving model to C:\Users\fdal\Desktop\bigs\TOBIGS\best3-14.pth
+Train Epoch: 15 [1280/35700] Loss: 0.002035 Acc: 1.0000
+Train Epoch: 15 [2560/35700] Loss: 0.006259 Acc: 1.0000
+Train Epoch: 15 [3840/35700] Loss: 0.005544 Acc: 1.0000
+Train Epoch: 15 [5120/35700] Loss: 0.005282 Acc: 1.0000
+Train Epoch: 15 [6400/35700] Loss: 0.001497 Acc: 1.0000
+Train Epoch: 15 [7680/35700] Loss: 0.007443 Acc: 1.0000
+Train Epoch: 15 [8960/35700] Loss: 0.007897 Acc: 1.0000
+Train Epoch: 15 [10240/35700] Loss: 0.005864 Acc: 1.0000
+Train Epoch: 15 [11520/35700] Loss: 0.001252 Acc: 1.0000
+Train Epoch: 15 [12800/35700] Loss: 0.001953 Acc: 1.0000
+Train Epoch: 15 [14080/35700] Loss: 0.006586 Acc: 1.0000
+Train Epoch: 15 [15360/35700] Loss: 0.056689 Acc: 0.9844
+Train Epoch: 15 [16640/35700] Loss: 0.002990 Acc: 1.0000
+Train Epoch: 15 [17920/35700] Loss: 0.014329 Acc: 0.9922
+Train Epoch: 15 [19200/35700] Loss: 0.009619 Acc: 1.0000
+Train Epoch: 15 [20480/35700] Loss: 0.007366 Acc: 1.0000
+Train Epoch: 15 [21760/35700] Loss: 0.006011 Acc: 1.0000
+Train Epoch: 15 [23040/35700] Loss: 0.004728 Acc: 1.0000
+Train Epoch: 15 [24320/35700] Loss: 0.009800 Acc: 0.9922
+Train Epoch: 15 [25600/35700] Loss: 0.001612 Acc: 1.0000
+Train Epoch: 15 [26880/35700] Loss: 0.002232 Acc: 1.0000
+Train Epoch: 15 [28160/35700] Loss: 0.002017 Acc: 1.0000
+Train Epoch: 15 [29440/35700] Loss: 0.002586 Acc: 1.0000
+Train Epoch: 15 [30720/35700] Loss: 0.069666 Acc: 0.9922
+Train Epoch: 15 [32000/35700] Loss: 0.008856 Acc: 1.0000
+Train Epoch: 15 [33280/35700] Loss: 0.003854 Acc: 1.0000
+Train Epoch: 15 [34560/35700] Loss: 0.003093 Acc: 1.0000
+	Test set: Average loss: 0.0408, Accuracy: 6224/6300 (99%)
+Train Epoch: 16 [1280/35700] Loss: 0.006698 Acc: 1.0000
+Train Epoch: 16 [2560/35700] Loss: 0.001760 Acc: 1.0000
+Train Epoch: 16 [3840/35700] Loss: 0.003524 Acc: 1.0000
+Train Epoch: 16 [5120/35700] Loss: 0.007276 Acc: 1.0000
+Train Epoch: 16 [6400/35700] Loss: 0.007295 Acc: 1.0000
+Train Epoch: 16 [7680/35700] Loss: 0.008822 Acc: 1.0000
+Train Epoch: 16 [8960/35700] Loss: 0.010521 Acc: 1.0000
+Train Epoch: 16 [10240/35700] Loss: 0.001867 Acc: 1.0000
+Train Epoch: 16 [11520/35700] Loss: 0.005164 Acc: 1.0000
+Train Epoch: 16 [12800/35700] Loss: 0.003157 Acc: 1.0000
+Train Epoch: 16 [14080/35700] Loss: 0.005262 Acc: 1.0000
+Train Epoch: 16 [15360/35700] Loss: 0.008923 Acc: 1.0000
+Train Epoch: 16 [16640/35700] Loss: 0.004938 Acc: 1.0000
+Train Epoch: 16 [17920/35700] Loss: 0.004617 Acc: 1.0000
+Train Epoch: 16 [19200/35700] Loss: 0.002539 Acc: 1.0000
+Train Epoch: 16 [20480/35700] Loss: 0.006119 Acc: 1.0000
+Train Epoch: 16 [21760/35700] Loss: 0.015102 Acc: 0.9922
+Train Epoch: 16 [23040/35700] Loss: 0.002279 Acc: 1.0000
+Train Epoch: 16 [24320/35700] Loss: 0.002649 Acc: 1.0000
+Train Epoch: 16 [25600/35700] Loss: 0.004936 Acc: 1.0000
+Train Epoch: 16 [26880/35700] Loss: 0.014666 Acc: 0.9922
+Train Epoch: 16 [28160/35700] Loss: 0.003947 Acc: 1.0000
+Train Epoch: 16 [29440/35700] Loss: 0.029122 Acc: 0.9922
+Train Epoch: 16 [30720/35700] Loss: 0.005567 Acc: 1.0000
+Train Epoch: 16 [32000/35700] Loss: 0.021152 Acc: 0.9922
+Train Epoch: 16 [33280/35700] Loss: 0.001724 Acc: 1.0000
+Train Epoch: 16 [34560/35700] Loss: 0.010212 Acc: 1.0000
+	Test set: Average loss: 0.0443, Accuracy: 6225/6300 (99%)
+Train Epoch: 17 [1280/35700] Loss: 0.001372 Acc: 1.0000
+Train Epoch: 17 [2560/35700] Loss: 0.002642 Acc: 1.0000
+Train Epoch: 17 [3840/35700] Loss: 0.008276 Acc: 1.0000
+Train Epoch: 17 [5120/35700] Loss: 0.000711 Acc: 1.0000
+Train Epoch: 17 [6400/35700] Loss: 0.006094 Acc: 1.0000
+Train Epoch: 17 [7680/35700] Loss: 0.002374 Acc: 1.0000
+Train Epoch: 17 [8960/35700] Loss: 0.007357 Acc: 1.0000
+Train Epoch: 17 [10240/35700] Loss: 0.009054 Acc: 1.0000
+Train Epoch: 17 [11520/35700] Loss: 0.001672 Acc: 1.0000
+Train Epoch: 17 [12800/35700] Loss: 0.010198 Acc: 1.0000
+Train Epoch: 17 [14080/35700] Loss: 0.004164 Acc: 1.0000
+Train Epoch: 17 [15360/35700] Loss: 0.007825 Acc: 1.0000
+Train Epoch: 17 [16640/35700] Loss: 0.001238 Acc: 1.0000
+Train Epoch: 17 [17920/35700] Loss: 0.002996 Acc: 1.0000
+Train Epoch: 17 [19200/35700] Loss: 0.004095 Acc: 1.0000
+Train Epoch: 17 [20480/35700] Loss: 0.034852 Acc: 0.9844
+Train Epoch: 17 [21760/35700] Loss: 0.018262 Acc: 0.9844
+Train Epoch: 17 [23040/35700] Loss: 0.003957 Acc: 1.0000
+Train Epoch: 17 [24320/35700] Loss: 0.013612 Acc: 0.9922
+Train Epoch: 17 [25600/35700] Loss: 0.002405 Acc: 1.0000
+Train Epoch: 17 [26880/35700] Loss: 0.013208 Acc: 1.0000
+Train Epoch: 17 [28160/35700] Loss: 0.005877 Acc: 1.0000
+Train Epoch: 17 [29440/35700] Loss: 0.001442 Acc: 1.0000
+Train Epoch: 17 [30720/35700] Loss: 0.003060 Acc: 1.0000
+Train Epoch: 17 [32000/35700] Loss: 0.007964 Acc: 1.0000
+Train Epoch: 17 [33280/35700] Loss: 0.001349 Acc: 1.0000
+Train Epoch: 17 [34560/35700] Loss: 0.001601 Acc: 1.0000
+	Test set: Average loss: 0.0406, Accuracy: 6228/6300 (99%)
+Train Epoch: 18 [1280/35700] Loss: 0.007855 Acc: 1.0000
+Train Epoch: 18 [2560/35700] Loss: 0.013239 Acc: 0.9922
+Train Epoch: 18 [3840/35700] Loss: 0.003596 Acc: 1.0000
+Train Epoch: 18 [5120/35700] Loss: 0.010549 Acc: 1.0000
+Train Epoch: 18 [6400/35700] Loss: 0.001103 Acc: 1.0000
+Train Epoch: 18 [7680/35700] Loss: 0.009002 Acc: 0.9922
+Train Epoch: 18 [8960/35700] Loss: 0.002198 Acc: 1.0000
+Train Epoch: 18 [10240/35700] Loss: 0.026013 Acc: 0.9922
+Train Epoch: 18 [11520/35700] Loss: 0.006125 Acc: 1.0000
+Train Epoch: 18 [12800/35700] Loss: 0.014629 Acc: 0.9922
+Train Epoch: 18 [14080/35700] Loss: 0.001693 Acc: 1.0000
+Train Epoch: 18 [15360/35700] Loss: 0.003779 Acc: 1.0000
+Train Epoch: 18 [16640/35700] Loss: 0.010631 Acc: 0.9922
+Train Epoch: 18 [17920/35700] Loss: 0.017860 Acc: 0.9922
+Train Epoch: 18 [19200/35700] Loss: 0.026382 Acc: 0.9922
+Train Epoch: 18 [20480/35700] Loss: 0.001608 Acc: 1.0000
+Train Epoch: 18 [21760/35700] Loss: 0.003383 Acc: 1.0000
+Train Epoch: 18 [23040/35700] Loss: 0.009806 Acc: 0.9922
+Train Epoch: 18 [24320/35700] Loss: 0.000895 Acc: 1.0000
+Train Epoch: 18 [25600/35700] Loss: 0.009932 Acc: 1.0000
+Train Epoch: 18 [26880/35700] Loss: 0.021312 Acc: 0.9844
+Train Epoch: 18 [28160/35700] Loss: 0.000664 Acc: 1.0000
+Train Epoch: 18 [29440/35700] Loss: 0.007818 Acc: 1.0000
+Train Epoch: 18 [30720/35700] Loss: 0.001943 Acc: 1.0000
+Train Epoch: 18 [32000/35700] Loss: 0.023076 Acc: 0.9922
+Train Epoch: 18 [33280/35700] Loss: 0.002365 Acc: 1.0000
+Train Epoch: 18 [34560/35700] Loss: 0.003900 Acc: 1.0000
+	Test set: Average loss: 0.0420, Accuracy: 6229/6300 (99%)
+Train Epoch: 19 [1280/35700] Loss: 0.000729 Acc: 1.0000
+Train Epoch: 19 [2560/35700] Loss: 0.001942 Acc: 1.0000
+Train Epoch: 19 [3840/35700] Loss: 0.006471 Acc: 1.0000
+Train Epoch: 19 [5120/35700] Loss: 0.009913 Acc: 1.0000
+Train Epoch: 19 [6400/35700] Loss: 0.008558 Acc: 0.9922
+Train Epoch: 19 [7680/35700] Loss: 0.005573 Acc: 1.0000
+Train Epoch: 19 [8960/35700] Loss: 0.013726 Acc: 0.9922
+Train Epoch: 19 [10240/35700] Loss: 0.004432 Acc: 1.0000
+Train Epoch: 19 [11520/35700] Loss: 0.007421 Acc: 1.0000
+Train Epoch: 19 [12800/35700] Loss: 0.001643 Acc: 1.0000
+Train Epoch: 19 [14080/35700] Loss: 0.000880 Acc: 1.0000
+Train Epoch: 19 [15360/35700] Loss: 0.003151 Acc: 1.0000
+Train Epoch: 19 [16640/35700] Loss: 0.002848 Acc: 1.0000
+Train Epoch: 19 [17920/35700] Loss: 0.004413 Acc: 1.0000
+Train Epoch: 19 [19200/35700] Loss: 0.008243 Acc: 1.0000
+Train Epoch: 19 [20480/35700] Loss: 0.006476 Acc: 1.0000
+Train Epoch: 19 [21760/35700] Loss: 0.004576 Acc: 1.0000
+Train Epoch: 19 [23040/35700] Loss: 0.015674 Acc: 0.9922
+Train Epoch: 19 [24320/35700] Loss: 0.004907 Acc: 1.0000
+Train Epoch: 19 [25600/35700] Loss: 0.003089 Acc: 1.0000
+Train Epoch: 19 [26880/35700] Loss: 0.001808 Acc: 1.0000
+Train Epoch: 19 [28160/35700] Loss: 0.001431 Acc: 1.0000
+Train Epoch: 19 [29440/35700] Loss: 0.005981 Acc: 1.0000
+Train Epoch: 19 [30720/35700] Loss: 0.010392 Acc: 0.9922
+Train Epoch: 19 [32000/35700] Loss: 0.000989 Acc: 1.0000
+Train Epoch: 19 [33280/35700] Loss: 0.010944 Acc: 1.0000
+Train Epoch: 19 [34560/35700] Loss: 0.002529 Acc: 1.0000
+	Test set: Average loss: 0.0422, Accuracy: 6228/6300 (99%)
+```
+
+In \[27\]:
+
+```text
+test
+```
+
+Out\[27\]:
+
+|  | Unnamed: 0 | pixel0 | pixel1 | pixel2 | pixel3 | pixel4 | pixel5 | pixel6 | pixel7 | pixel8 | ... | pixel774 | pixel775 | pixel776 | pixel777 | pixel778 | pixel779 | pixel780 | pixel781 | pixel782 | pixel783 |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| 0 | 57808 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | ... | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| 1 | 4960 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | ... | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| 2 | 35755 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | ... | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| 3 | 15543 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | ... | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| 4 | 48968 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | ... | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| ... | ... | ... | ... | ... | ... | ... | ... | ... | ... | ... | ... | ... | ... | ... | ... | ... | ... | ... | ... | ... | ... |
+| 17995 | 53718 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | ... | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| 17996 | 78 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | ... | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| 17997 | 33373 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | ... | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| 17998 | 36134 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | ... | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| 17999 | 54021 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | ... | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+
+18000 rows × 785 columnsIn \[50\]:
+
+```python
+X_test = torch.tensor(test.iloc[:,1:].values / 255,dtype=torch.float)
+```
+
+In \[51\]:
+
+```text
+X_test
+```
+
+Out\[51\]:
+
+```text
+tensor([[0., 0., 0.,  ..., 0., 0., 0.],
+        [0., 0., 0.,  ..., 0., 0., 0.],
+        [0., 0., 0.,  ..., 0., 0., 0.],
+        ...,
+        [0., 0., 0.,  ..., 0., 0., 0.],
+        [0., 0., 0.,  ..., 0., 0., 0.],
+        [0., 0., 0.,  ..., 0., 0., 0.]])
+```
+
+In \[52\]:
+
+```python
+best_model = TOBIGS(input_dims=784, n_hiddens=[256, 256], n_class=10)
+best_model.load_state_dict(torch.load('./best3-14.pth'))
+best_model.cuda()
+best_model.eval()
+X_test = Variable(X_test.cuda())
+pred = best_model(X_test)
+```
+
+```text
+Sequential(
+  (fc1): Linear(in_features=784, out_features=256, bias=True)
+  (relu1): ReLU()
+  (drop1): Dropout(p=0.2, inplace=False)
+  (fc2): Linear(in_features=256, out_features=256, bias=True)
+  (relu2): ReLU()
+  (drop2): Dropout(p=0.2, inplace=False)
+  (out): Linear(in_features=256, out_features=10, bias=True)
+)
+```
+
+In \[57\]:
+
+```python
+sub = pd.read_csv("sample_submission.csv")
+```
+
+In \[61\]:
+
+```python
+sub["Category"] = pred.argmax(axis=1).cpu().numpy()
+```
+
+In \[65\]:
+
+```text
+sub.to_csv("torch_pred.csv")
+```
+

@@ -1,4 +1,4 @@
-# 전처리와 시각화 \(Pandas,Matplotlib,Seaborn\)
+# 데이터 전처리와 시각화
 
 전처리와 EDA\_13기 조상연
 
