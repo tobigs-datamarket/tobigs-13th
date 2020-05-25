@@ -1,6 +1,6 @@
 # Table of contents
 
-* [Tobigs](README.md)
+* [Who we are](README.md)
 
 ## Machine Learning <a id="data-analysis"></a>
 
